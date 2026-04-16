@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Matches | Echoes</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&amp;family=Be_Vietnam_Pro:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error": "#ffffff",
+                    "inverse-primary": "#c5c0ff",
+                    "on-secondary-fixed": "#002117",
+                    "surface-variant": "#e5e2df",
+                    "on-tertiary-container": "#d2cdff",
+                    "tertiary": "#403b76",
+                    "surface-bright": "#fcf9f5",
+                    "surface-container": "#f0edea",
+                    "surface": "#fcf9f5",
+                    "inverse-surface": "#30302e",
+                    "on-primary": "#ffffff",
+                    "tertiary-fixed": "#e4dfff",
+                    "error-container": "#ffdad6",
+                    "tertiary-container": "#58538f",
+                    "primary-fixed": "#e3dfff",
+                    "primary": "#3b309e",
+                    "inverse-on-surface": "#f3f0ed",
+                    "background": "#fcf9f5",
+                    "secondary-fixed": "#8af7cf",
+                    "on-secondary-fixed-variant": "#00513d",
+                    "on-primary-fixed": "#140067",
+                    "surface-container-high": "#eae8e4",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary": "#ffffff",
+                    "outline-variant": "#c8c4d5",
+                    "secondary-fixed-dim": "#6edab4",
+                    "secondary": "#006c52",
+                    "on-primary-container": "#d1ccff",
+                    "on-surface": "#1b1c1a",
+                    "primary-container": "#534ab7",
+                    "surface-container-highest": "#e5e2df",
+                    "on-tertiary-fixed": "#18114c",
+                    "on-tertiary-fixed-variant": "#443f7a",
+                    "surface-container-low": "#f6f3f0",
+                    "on-error-container": "#93000a",
+                    "on-secondary-container": "#007257",
+                    "outline": "#787584",
+                    "tertiary-fixed-dim": "#c6c0ff",
+                    "error": "#ba1a1a",
+                    "secondary-container": "#8af7cf",
+                    "surface-container-lowest": "#ffffff",
+                    "on-surface-variant": "#474553",
+                    "surface-dim": "#dcdad6",
+                    "surface-tint": "#584fbc",
+                    "on-background": "#1b1c1a",
+                    "on-primary-fixed-variant": "#3f35a3",
+                    "primary-fixed-dim": "#c5c0ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Be Vietnam Pro"],
+                    "label": ["Be Vietnam Pro"]
+            },
+            "animation": {
+                "subtle-pulse": "subtle-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+            },
+            "keyframes": {
+                "subtle-pulse": {
+                    "0%, 100%": { opacity: 1, transform: "scale(1)" },
+                    "50%": { opacity: 0.8, transform: "scale(0.98)" },
+                }
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .echo-bubble {
+            border-top-left-radius: 3rem;
+            border-top-right-radius: 3rem;
+            border-bottom-left-radius: 0.5rem;
+            border-bottom-right-radius: 3rem;
+        }
+        .bg-glass {
+            backdrop-filter: blur(20px);
+        }
+        .match-card {
+            background-color: #f8f7ff; /* Very light purple tint */
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 0px 4px 24px rgba(83, 74, 183, 0.08);
+        }
+        .match-card:hover {
+            background-color: #f1f0ff;
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 12px 32px -10px rgba(59, 48, 158, 0.2);
+        }
+        .match-card:active {
+            transform: translateY(-2px) scale(0.99);
+        }
+        .btn-signature-gradient {
+            background: linear-gradient(90deg, #534AB7 0%, #5DCAA5 100%);
+            transition: all 0.3s ease;
+            color: #ffffff !important;
+        }
+        .btn-signature-gradient:hover {
+            box-shadow: 0 8px 20px -6px rgba(83, 74, 183, 0.5);
+            filter: brightness(1.05);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#fcf9f5]/60 dark:bg-[#1a1b1e]/60 backdrop-blur-xl shadow-sm shadow-[#3b309e]/5">
+<div class="flex justify-between items-center px-6 py-4 w-full max-w-5xl mx-auto">
+<div class="text-2xl font-headline font-bold tracking-tight text-[#3b309e] dark:text-[#534ab7]">Echoes</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-primary-container/10 rounded-full">
+<span class="material-symbols-outlined text-[#3b309e] text-sm" style="font-variation-settings: 'FILL' 1;">toll</span>
+<span class="text-xs font-bold text-[#3b309e] font-label">120</span>
+</div>
+<div class="hidden md:flex items-center gap-8 text-[#474553]">
+<a class="hover:opacity-80 transition-opacity font-headline text-sm" href="#">Feed</a>
+<a class="hover:opacity-80 transition-opacity font-headline text-sm" href="#">Write</a>
+<a class="text-[#3b309e] font-bold font-headline text-sm" href="#">Matches</a>
+<a class="hover:opacity-80 transition-opacity font-headline text-sm" href="#">Profile</a>
+</div>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-32 px-4 max-w-3xl mx-auto min-h-screen">
+<!-- Hero Section -->
+<div class="mb-12 text-center">
+<h1 class="text-4xl md:text-5xl font-headline font-extrabold tracking-tight text-primary mb-4 leading-tight">Shared Resonance</h1>
+<p class="text-on-surface-variant max-w-md mx-auto text-lg leading-relaxed font-body">Souls that have whispered similar echoes into the void. Connect safely.</p>
+</div>
+<!-- Matches List -->
+<div class="space-y-8">
+<!-- Match Item 1 -->
+<div class="match-card p-6 echo-bubble shadow-sm cursor-pointer">
+<div class="flex items-start gap-6">
+<div class="relative flex-shrink-0">
+<div class="w-16 h-16 rounded-full bg-primary-fixed flex items-center justify-center overflow-hidden">
+<div class="w-10 h-10 bg-primary-container rounded-lg rotate-45 opacity-40"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-3xl">filter_vintage</span>
+</div>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-3">
+<div>
+<h3 class="font-headline font-bold text-lg text-primary">Prismatic Hexagon</h3>
+<span class="text-xs font-label text-on-surface-variant">Matched via: "Late Night Fears"</span>
+</div>
+<div class="flex items-center gap-1 text-secondary font-bold text-sm animate-subtle-pulse">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">electric_bolt</span>
+                            92% Harmony
+                        </div>
+</div>
+<p class="text-on-surface italic leading-relaxed mb-6 opacity-80 font-body">
+                        "...sometimes the silence at 3 AM feels heavier than any noise during the day. I wonder if the stars ever feel lonely up there..."
+                    </p>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-lg">schedule</span>
+<span class="text-xs font-label text-on-surface-variant">Shared 2h ago</span>
+</div>
+<button class="btn-signature-gradient px-6 py-2.5 text-on-primary rounded-full font-headline font-bold text-sm flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-lg">
+<span class="material-symbols-outlined text-sm">chat_bubble</span>
+                            Connect • 5
+                            <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">toll</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Match Item 2 -->
+<div class="match-card p-6 echo-bubble shadow-sm border border-primary/5 cursor-pointer">
+<div class="flex items-start gap-6">
+<div class="relative flex-shrink-0">
+<div class="w-16 h-16 rounded-full bg-secondary-container flex items-center justify-center overflow-hidden">
+<div class="w-12 h-12 border-4 border-secondary/20 rounded-full"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary text-3xl">all_inclusive</span>
+</div>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-3">
+<div>
+<h3 class="font-headline font-bold text-lg text-secondary">Ethereal Circle</h3>
+<span class="text-xs font-label text-on-surface-variant">Matched via: "Unspoken Dreams"</span>
+</div>
+<div class="flex items-center gap-1 text-secondary font-bold text-sm animate-subtle-pulse">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">electric_bolt</span>
+                            84% Harmony
+                        </div>
+</div>
+<p class="text-on-surface italic leading-relaxed mb-6 opacity-80 font-body">
+                        "...always wanted to build something that lasts. Not for fame, but just to know I touched the world in a way that didn't hurt..."
+                    </p>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-lg">schedule</span>
+<span class="text-xs font-label text-on-surface-variant">Shared 5h ago</span>
+</div>
+<button class="btn-signature-gradient px-6 py-2.5 text-on-primary rounded-full font-headline font-bold text-sm flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-lg">
+<span class="material-symbols-outlined text-sm">chat_bubble</span>
+                            Connect • 5
+                            <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">toll</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Match Item 3 -->
+<div class="match-card p-6 echo-bubble shadow-sm cursor-pointer">
+<div class="flex items-start gap-6">
+<div class="relative flex-shrink-0">
+<div class="w-16 h-16 rounded-full bg-tertiary-fixed flex items-center justify-center overflow-hidden">
+<div class="w-8 h-8 bg-tertiary rounded-full animate-pulse opacity-30"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-tertiary text-3xl">change_history</span>
+</div>
+</div>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between mb-3">
+<div>
+<h3 class="font-headline font-bold text-lg text-primary">Velvet Triangle</h3>
+<span class="text-xs font-label text-on-surface-variant">Matched via: "Identity Journey"</span>
+</div>
+<div class="flex items-center gap-1 text-secondary font-bold text-sm animate-subtle-pulse">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">electric_bolt</span>
+                            79% Harmony
+                        </div>
+</div>
+<p class="text-on-surface italic leading-relaxed mb-6 opacity-80 font-body">
+                        "...finding out that who I am isn't who they wanted me to be was the scariest and most beautiful day of my life..."
+                    </p>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-lg">schedule</span>
+<span class="text-xs font-label text-on-surface-variant">Shared 1d ago</span>
+</div>
+<button class="btn-signature-gradient px-6 py-2.5 text-on-primary rounded-full font-headline font-bold text-sm flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-lg">
+<span class="material-symbols-outlined text-sm">chat_bubble</span>
+                            Connect • 5
+                            <span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">toll</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Token Insight -->
+<div class="mt-16 p-8 bg-surface-container rounded-xl text-center">
+<span class="material-symbols-outlined text-primary text-4xl mb-4" style="font-variation-settings: 'FILL' 1;">toll</span>
+<h4 class="font-headline font-bold text-primary mb-2">Meaningful Intent</h4>
+<p class="text-on-surface-variant text-sm max-w-sm mx-auto font-body">Connecting costs 5 tokens to ensure every conversation starts with intention. Tokens replenish daily as you share and listen.</p>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 w-full flex justify-around items-end pb-6 px-4 bg-[#fcf9f5]/80 dark:bg-[#1a1b1e]/80 backdrop-blur-2xl z-50 rounded-t-[3rem] shadow-[0_-12px_40px_rgba(59,48,158,0.06)]">
+<a class="flex flex-col items-center justify-center text-[#474553] dark:text-[#e5e2df] p-2 hover:text-[#3b309e] transition-all duration-300" href="#">
+<span class="material-symbols-outlined">rss_feed</span>
+<span class="font-label text-[10px] tracking-wide mt-1">Feed</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#474553] dark:text-[#e5e2df] p-2 hover:text-[#3b309e] transition-all duration-300" href="#">
+<span class="material-symbols-outlined">edit_note</span>
+<span class="font-label text-[10px] tracking-wide mt-1">Write</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#534ab7] text-white rounded-full p-3 mb-2 scale-110 shadow-lg cubic-bezier(0.34, 1.56, 0.64, 1) transition-all duration-300" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-label text-[10px] tracking-wide mt-1">Matches</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#474553] dark:text-[#e5e2df] p-2 hover:text-[#3b309e] transition-all duration-300" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label text-[10px] tracking-wide mt-1">Profile</span>
+</a>
+</nav>
+<!-- Background Elements -->
+<div class="fixed top-[10%] left-[5%] w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10"></div>
+<div class="fixed bottom-[20%] right-[10%] w-96 h-96 bg-secondary/5 rounded-full blur-3xl -z-10"></div>
+</body></html>

@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+.echo-bubble {
+    border-top-left-radius: 3rem;
+    border-top-right-radius: 3rem;
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 3rem;
+}
+.bg-glass {
+    backdrop-filter: blur(20px);
+}
+.match-card {
+    background-color: #f8f7ff; /* Very light purple tint */
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0px 4px 24px rgba(83, 74, 183, 0.08);
+}
+.match-card:hover {
+    background-color: #f1f0ff;
+    transform: translateY(-4px) scale(1.01);
+    box-shadow: 0 12px 32px -10px rgba(59, 48, 158, 0.2);
+}
+.match-card:active {
+    transform: translateY(-2px) scale(0.99);
+}
+.btn-signature-gradient {
+    background: linear-gradient(90deg, #534AB7 0%, #5DCAA5 100%);
+    transition: all 0.3s ease;
+    color: #ffffff !important;
+}
+.btn-signature-gradient:hover {
+    box-shadow: 0 8px 20px -6px rgba(83, 74, 183, 0.5);
+    filter: brightness(1.05);
+}
+.bg-sanctuary {
+    background: linear-gradient(135deg, #fcf9f5 0%, #e1f5ee 100%);
+}
+.signature-gradient {
+    background: linear-gradient(135deg, #3b309e 0%, #534ab7 100%);
+}
+.halo-effect {
+    box-shadow: 0 0 60px 10px rgba(59, 48, 158, 0.15);
+}
+
+/* Shimmer Effect */
+.shimmer-btn {
+    position: relative;
+    overflow: hidden;
+}
+.shimmer-btn::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        to bottom right,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.1) 40%,
+        rgba(255, 255, 255, 0.4) 50%,
+        rgba(255, 255, 255, 0.1) 60%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(45deg);
+    animation: shimmer 4s infinite;
+}
+@keyframes shimmer {
+    0% { transform: translateX(-150%) rotate(45deg); }
+    100% { transform: translateX(150%) rotate(45deg); }
+}
+
+/* Floating Background Shapes */
+.float-shape {
+    position: absolute;
+    opacity: 0.08;
+    pointer-events: none;
+    animation: float 20s infinite linear;
+}
+@keyframes float {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(20px, -30px) rotate(120deg); }
+    66% { transform: translate(-20px, 15px) rotate(240deg); }
+    100% { transform: translate(0, 0) rotate(360deg); }
+}
+.shape-slow { animation-duration: 30s; }
+.shape-slower { animation-duration: 40s; }
+
+.asymmetric-hexagon {
+    clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+}
+.resonance-badge {
+    box-shadow: 0 0 15px rgba(83, 74, 183, 0.15);
+}

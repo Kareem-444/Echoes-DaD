@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Ethereal Echo - AI Assistant</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface": "#1b1c19",
+                        "background": "#faf9f4",
+                        "on-primary-fixed": "#140067",
+                        "surface-container-highest": "#e3e3de",
+                        "secondary": "#086b53",
+                        "on-background": "#1b1c19",
+                        "inverse-primary": "#c5c0ff",
+                        "surface-tint": "#584fbc",
+                        "surface-container": "#efeee9",
+                        "on-tertiary-fixed": "#18114c",
+                        "surface-variant": "#e3e3de",
+                        "outline-variant": "#c8c4d5",
+                        "inverse-surface": "#30312e",
+                        "inverse-on-surface": "#f2f1ec",
+                        "surface-container-low": "#f5f4ef",
+                        "tertiary-fixed": "#e4dfff",
+                        "on-secondary-fixed-variant": "#00513e",
+                        "secondary-container": "#a0f3d4",
+                        "tertiary": "#403b76",
+                        "primary-fixed": "#e3dfff",
+                        "outline": "#787584",
+                        "on-tertiary-container": "#d2cdff",
+                        "on-secondary-fixed": "#002117",
+                        "surface-container-high": "#e9e8e3",
+                        "on-primary-container": "#d1ccff",
+                        "secondary-fixed-dim": "#84d6b9",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#474553",
+                        "on-error-container": "#93000a",
+                        "error": "#ba1a1a",
+                        "primary": "#3b309e",
+                        "primary-fixed-dim": "#c5c0ff",
+                        "on-tertiary-fixed-variant": "#443f7a",
+                        "on-primary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-container": "#167159",
+                        "tertiary-fixed-dim": "#c6c0ff",
+                        "surface-dim": "#dbdad5",
+                        "secondary-fixed": "#a0f3d4",
+                        "error-container": "#ffdad6",
+                        "primary-container": "#534ab7",
+                        "on-secondary": "#ffffff",
+                        "surface-bright": "#faf9f4",
+                        "surface": "#faf9f4",
+                        "tertiary-container": "#58538f",
+                        "on-primary-fixed-variant": "#3f35a3",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #faf9f4; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; }
+        .glass-panel { backdrop-filter: blur(24px); }
+        .soul-gradient { background: linear-gradient(135deg, #3B309E 0%, #534AB7 100%); }
+        .ai-gradient { background: linear-gradient(135deg, #534AB7 0%, #AFA9EC 100%); }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface min-h-screen">
+<!-- Top AppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#FAF9F4]/70 backdrop-blur-xl flex justify-between items-center px-6 h-16">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-surface-container-highest rounded-[1rem] overflow-hidden">
+<img alt="Profile Identity" class="w-full h-full object-cover" data-alt="Soft-hexagon geometric profile identity with abstract violet and teal gradients" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsr-SE-XorHZZZMgWdgWDWEMoA0k5UdXxSed32rosx8qz1xBHqIBR6itDbckZjuf4CPpB-iskBaF4sPmSqX5zj1Q8JP-cgZpfRPCzyai0jhKcuu4ldW66Nc97x_I2ONFES87KW72efoP1z1Dee8NReok5BTFwuKdA7APRQWLIzcoKG9wnsF7Cw4OVkw_SMmw7vknS4urzz0fQy2riB731W51KIAEUQHQft_oZq4J3LeVx4im8ywwBZb66Fb_JdC-RIpy-mw5gtVtHK"/>
+</div>
+<h1 class="text-xl font-bold text-primary tracking-tight font-headline">The Ethereal Echo</h1>
+</div>
+<button class="text-primary hover:opacity-80 transition-opacity p-2 active:scale-95 duration-200">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</button>
+</header>
+<!-- Main Canvas Content (Feed Background) -->
+<main class="pt-24 pb-32 px-6 max-w-2xl mx-auto space-y-8">
+<section class="space-y-4">
+<h2 class="text-3xl font-extrabold text-primary tracking-tighter leading-none">Your Sanctuary</h2>
+<p class="text-on-surface-variant leading-[1.6x]">Experience the weightless grace of connection. Share an Echo and find resonance in the void.</p>
+</section>
+<!-- Bento Grid Example Content -->
+<div class="grid grid-cols-2 gap-4">
+<div class="col-span-2 p-8 rounded-lg bg-surface-container-lowest shadow-[0_12px_32px_rgba(83,74,183,0.04)] space-y-4">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-secondary-container text-sm">auto_awesome</span>
+</div>
+<span class="text-xs font-semibold tracking-widest text-primary uppercase">Trending Echo</span>
+</div>
+<p class="text-lg font-medium leading-relaxed italic">"The silence between two souls is where the loudest truths reside. Tonight, I am listening to the wind."</p>
+<div class="flex justify-between items-center pt-4">
+<span class="text-xs text-on-surface-variant opacity-60">12 mins ago · Digital Sanctuary</span>
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-surface-container-lowest bg-primary-container"></div>
+<div class="w-6 h-6 rounded-full border-2 border-surface-container-lowest bg-secondary-container"></div>
+</div>
+</div>
+</div>
+<div class="p-6 rounded-lg bg-surface-container-low flex flex-col justify-between h-48">
+<span class="material-symbols-outlined text-primary text-3xl">explore</span>
+<div>
+<h3 class="font-bold text-primary">Discover</h3>
+<p class="text-xs text-on-surface-variant">Find resonance in new realms.</p>
+</div>
+</div>
+<div class="p-6 rounded-lg bg-tertiary-container text-on-tertiary-container flex flex-col justify-between h-48">
+<span class="material-symbols-outlined text-3xl">notifications</span>
+<div>
+<h3 class="font-bold">Echoes</h3>
+<p class="text-xs opacity-80">4 new resonances found.</p>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-8 pb-8 pt-4 bg-[#FAF9F4]/70 backdrop-blur-xl rounded-t-[2.5rem] z-40 shadow-[0_-12px_32px_rgba(83,74,183,0.08)]">
+<button class="flex flex-col items-center justify-center text-primary/40 p-3 hover:bg-[#534AB7]/10 rounded-full transition-all">
+<span class="material-symbols-outlined">auto_awesome</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary/40 p-3 hover:bg-[#534AB7]/10 rounded-full transition-all">
+<span class="material-symbols-outlined">explore</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary/40 p-3 hover:bg-[#534AB7]/10 rounded-full transition-all">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex flex-col items-center justify-center text-primary/40 p-3 hover:bg-[#534AB7]/10 rounded-full transition-all">
+<span class="material-symbols-outlined">person</span>
+</button>
+</nav>
+<!-- Floating AI Assistant Button (FAB) -->
+<!-- Positioned above BottomNavBar -->
+<div class="fixed bottom-32 right-6 z-50">
+<button class="ai-gradient w-14 h-14 rounded-full flex items-center justify-center text-white shadow-[0_12px_32px_rgba(83,74,183,0.3)] hover:scale-110 active:scale-90 transition-all duration-300 relative group">
+<!-- Pulse Glow Effect -->
+<span class="absolute inset-0 rounded-full bg-primary-container animate-ping opacity-20 group-hover:hidden"></span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</button>
+</div>
+<!-- AI Chat Drawer (Bottom Sheet) -->
+<!-- Set to absolute bottom, height 70% -->
+<div class="fixed inset-x-0 bottom-0 h-[663px] z-[60] bg-surface-container-low rounded-t-[3rem] shadow-2xl flex flex-col border-t border-white/20 transition-transform duration-500 ease-in-out transform translate-y-0">
+<!-- Drawer Header -->
+<div class="px-8 pt-8 pb-6 flex items-center justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 ai-gradient rounded-xl flex items-center justify-center shadow-lg">
+<img alt="AI Avatar" class="w-8 h-8 object-contain" data-alt="A magical geometric crystalline shape glowing with violet and lavender light on a dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCRz5r2upcZD_yK2v14svp04TQT1szcYzCTa6B8klOfs2nCuh6FaR4nR16ZOSSawnu-mSoiU9AKmCCx6qe-MkphwUM0N-FfgogT8Z_nhgo9iqm4MTV_RoTv1D5H6mw9qyQQlDrr2PqT5hGZTn2HzaCSC4pD5KhqwS6IndxqnnTV0MrNuhvm5Zw_zsUUTnfgeW5mu60XAs3BS28unSdBTGn1Yc_JwgLjN7inQIJ-CbsuidQRfsRJ9AvY37Qx4eO54QEAyj9n5t_pJboX"/>
+</div>
+<div>
+<h3 class="text-xl font-extrabold text-primary tracking-tight font-headline">Echo Guide</h3>
+<p class="text-xs text-on-surface-variant font-medium opacity-70">Your anonymous companion</p>
+</div>
+</div>
+<button class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center text-primary hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<!-- Chat Area -->
+<div class="flex-1 overflow-y-auto px-8 space-y-6 pb-24">
+<!-- System Welcome -->
+<div class="flex gap-4">
+<div class="w-8 h-8 rounded-lg ai-gradient flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-xs" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[85%]">
+<p class="text-sm leading-relaxed text-on-surface">Hello, beautiful soul. I am here to help you navigate the Echo landscape. How can I assist you today?</p>
+</div>
+</div>
+<!-- Quick Actions Grid -->
+<div class="grid grid-cols-2 gap-3 pt-2">
+<button class="p-4 bg-white/60 text-left rounded-2xl hover:bg-white transition-colors group">
+<span class="material-symbols-outlined text-primary mb-2 block group-hover:scale-110 transition-transform">help_center</span>
+<span class="text-xs font-bold text-primary block">How to use Echoes</span>
+<span class="text-[10px] text-on-surface-variant">Sharing your first thought</span>
+</button>
+<button class="p-4 bg-white/60 text-left rounded-2xl hover:bg-white transition-colors group">
+<span class="material-symbols-outlined text-secondary mb-2 block group-hover:scale-110 transition-transform">favorite</span>
+<span class="text-xs font-bold text-secondary block">Matches</span>
+<span class="text-[10px] text-on-surface-variant">Finding resonant souls</span>
+</button>
+<button class="p-4 bg-white/60 text-left rounded-2xl hover:bg-white transition-colors group">
+<span class="material-symbols-outlined text-tertiary mb-2 block group-hover:scale-110 transition-transform">eco</span>
+<span class="text-xs font-bold text-tertiary block">Safety Tips</span>
+<span class="text-[10px] text-on-surface-variant">Protecting your peace</span>
+</button>
+<button class="p-4 bg-white/60 text-left rounded-2xl hover:bg-white transition-colors group">
+<span class="material-symbols-outlined text-primary-container mb-2 block group-hover:scale-110 transition-transform">toll</span>
+<span class="text-xs font-bold text-primary-container block">Token Info</span>
+<span class="text-[10px] text-on-surface-variant">Managing your Echoes</span>
+</button>
+</div>
+<!-- Sample Message History -->
+<div class="flex gap-4 justify-end">
+<div class="soul-gradient p-4 rounded-2xl rounded-tr-none shadow-md max-w-[80%] text-white">
+<p class="text-sm leading-relaxed">Tell me more about how Echo Tokens work.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="w-8 h-8 rounded-lg ai-gradient flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-xs" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div class="bg-surface-container-lowest p-4 rounded-2xl rounded-tl-none shadow-sm max-w-[85%] space-y-3">
+<p class="text-sm leading-relaxed text-on-surface">Echo Tokens are a way to ensure every interaction is intentional. You gain 10 tokens daily to spend on:</p>
+<ul class="text-xs space-y-2 text-on-surface-variant font-medium">
+<li class="flex items-center gap-2">
+<span class="w-1 h-1 rounded-full bg-primary"></span> Deep Resonances
+                        </li>
+<li class="flex items-center gap-2">
+<span class="w-1 h-1 rounded-full bg-primary"></span> Extended Threads
+                        </li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Input Area (Fixed to bottom of drawer) -->
+<div class="absolute bottom-0 inset-x-0 p-6 bg-surface-container-low/95 backdrop-blur-md">
+<div class="relative flex items-center">
+<input class="w-full bg-surface-container-lowest border-none rounded-full py-4 pl-6 pr-14 text-sm focus:ring-2 focus:ring-primary/20 placeholder:text-on-surface-variant/40" placeholder="Ask anything..." type="text"/>
+<button class="absolute right-2 w-10 h-10 soul-gradient text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-sm">send</span>
+</button>
+</div>
+</div>
+</div>
+</body></html>
