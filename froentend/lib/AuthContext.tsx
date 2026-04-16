@@ -27,15 +27,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       const storedToken = typeof window !== 'undefined'
-        ? localStorage.getItem('echoes_token')
+        ? localStorage.getItem('access_token') || localStorage.getItem('echoes_token')
         : null;
 
       if (storedToken) {
+        localStorage.setItem('access_token', storedToken);
+        localStorage.setItem('echoes_token', storedToken);
         setToken(storedToken);
         try {
           const response = await apiService.getMe();
           setUser(response.data as User);
         } catch {
+          localStorage.removeItem('access_token');
           localStorage.removeItem('echoes_token');
           setToken(null);
         }
@@ -47,6 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const persistToken = (accessToken: string) => {
+    localStorage.setItem('access_token', accessToken);
     localStorage.setItem('echoes_token', accessToken);
     document.cookie = `echoes_token=${accessToken}; path=/; max-age=604800; SameSite=Lax`;
     setToken(accessToken);
@@ -71,6 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    localStorage.removeItem('access_token');
     localStorage.removeItem('echoes_token');
     document.cookie = 'echoes_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
     setToken(null);

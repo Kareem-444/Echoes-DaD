@@ -80,3 +80,34 @@ export interface AuthResponse {
   refresh: string;
   user: User;
 }
+
+// Notifications
+
+export type NotificationType = 'chat_message' | 'new_match' | 'resonance_milestone';
+
+export interface ChatMessageNotification {
+  type: 'chat_message';
+  match_id: string;
+  sender_anonymous_name: string;
+  content: string;
+  timestamp: string;
+}
+
+export interface NewMatchNotification {
+  type: 'new_match';
+  match_id: string;
+  harmony_score: number;
+  anonymous_name: string;
+}
+
+export interface ResonanceMilestoneNotification {
+  type: 'resonance_milestone';
+  echo_id: string;
+  milestone: number;
+  echo_preview: string;
+}
+
+export type NotificationPayload =
+  | ChatMessageNotification
+  | NewMatchNotification
+  | ResonanceMilestoneNotification;

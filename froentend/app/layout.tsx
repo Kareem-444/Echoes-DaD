@@ -3,7 +3,9 @@ import { Plus_Jakarta_Sans, Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/lib/AuthContext";
 import { ToastProvider } from "@/lib/ToastContext";
+import { WebSocketProvider } from "@/lib/contexts/WebSocketContext";
 import AIAssistant from "@/components/AIAssistant";
+import NotificationListener from "@/components/NotificationListener";
 
 const plusJakartaSans = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
@@ -34,10 +36,13 @@ export default function RootLayout({
       </head>
       <body className={`${plusJakartaSans.variable} ${beVietnamPro.variable}`}>
         <AuthProvider>
-          <ToastProvider>
-            {children}
-            <AIAssistant />
-          </ToastProvider>
+          <WebSocketProvider>
+            <ToastProvider>
+              {children}
+              <NotificationListener />
+              <AIAssistant />
+            </ToastProvider>
+          </WebSocketProvider>
         </AuthProvider>
       </body>
     </html>

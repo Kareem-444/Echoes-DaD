@@ -7,6 +7,7 @@ REASON_CHOICES = [
     ('daily_reward', 'Daily Reward'),
     ('purchase', 'Purchase'),
     ('resonate', 'Resonate'),
+    ('boost', 'Boost'),
 ]
 
 

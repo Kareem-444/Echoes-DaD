@@ -1,4 +1,6 @@
 from django.db.models import Q
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -70,6 +72,22 @@ def chat_messages(request, match_id):
         match=match,
         sender=request.user,
         content=serializer.validated_data['content'],
+    )
+
+    recipient = match.user1 if match.user2 == request.user else match.user2
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f'user_{recipient.id}',
+        {
+            'type': 'send_notification',
+            'payload': {
+                'type': 'chat_message',
+                'match_id': str(match.id),
+                'sender_anonymous_name': request.user.anonymous_name,
+                'content': message.content,
+                'timestamp': message.created_at.isoformat(),
+            },
+        },
     )
 
     return Response(MessageSerializer(message).data, status=status.HTTP_201_CREATED)

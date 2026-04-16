@@ -1,5 +1,7 @@
 import random
 from django.db.models import Q
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -75,6 +77,7 @@ def generate_matches(request):
     selected = random.sample(candidates, min(3, len(candidates)))
 
     created_matches = []
+    channel_layer = get_channel_layer()
     for candidate in selected:
         their_echo = Echo.objects.filter(author=candidate).order_by('-created_at').first()
         if not their_echo:
@@ -93,6 +96,31 @@ def generate_matches(request):
             harmony_score=harmony,
         )
         created_matches.append(match)
+
+        async_to_sync(channel_layer.group_send)(
+            f'user_{user.id}',
+            {
+                'type': 'send_notification',
+                'payload': {
+                    'type': 'new_match',
+                    'match_id': str(match.id),
+                    'harmony_score': match.harmony_score,
+                    'anonymous_name': candidate.anonymous_name,
+                },
+            },
+        )
+        async_to_sync(channel_layer.group_send)(
+            f'user_{candidate.id}',
+            {
+                'type': 'send_notification',
+                'payload': {
+                    'type': 'new_match',
+                    'match_id': str(match.id),
+                    'harmony_score': match.harmony_score,
+                    'anonymous_name': user.anonymous_name,
+                },
+            },
+        )
 
     serializer = MatchSerializer(created_matches, many=True)
     return Response(serializer.data, status=status.HTTP_201_CREATED)

@@ -8,8 +8,8 @@ class EchoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Echo
-        fields = ['id', 'author', 'content', 'resonance_count', 'mood', 'expires_at', 'created_at']
-        read_only_fields = ['id', 'author', 'resonance_count', 'expires_at', 'created_at']
+        fields = ['id', 'author', 'content', 'resonance_count', 'mood', 'expires_at', 'is_boosted', 'boost_count', 'created_at']
+        read_only_fields = ['id', 'author', 'resonance_count', 'expires_at', 'is_boosted', 'boost_count', 'created_at']
 
     def validate_content(self, value):
         if not value.strip():
@@ -20,8 +20,8 @@ class EchoSerializer(serializers.ModelSerializer):
 class EchoCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Echo
-        fields = ['id', 'content', 'mood', 'resonance_count', 'expires_at', 'created_at']
-        read_only_fields = ['id', 'resonance_count', 'expires_at', 'created_at']
+        fields = ['id', 'content', 'mood', 'resonance_count', 'expires_at', 'is_boosted', 'boost_count', 'created_at']
+        read_only_fields = ['id', 'resonance_count', 'expires_at', 'is_boosted', 'boost_count', 'created_at']
 
 class DailyPromptSerializer(serializers.ModelSerializer):
     class Meta:

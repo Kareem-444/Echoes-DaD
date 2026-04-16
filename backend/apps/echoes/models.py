@@ -16,6 +16,8 @@ class Echo(models.Model):
     resonance_count = models.IntegerField(default=0)
     mood = models.CharField(max_length=20, null=True, blank=True)
     expires_at = models.DateTimeField(null=True, blank=True)
+    is_boosted = models.BooleanField(default=False)
+    boost_count = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

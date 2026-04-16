@@ -12,7 +12,7 @@ const api = axios.create({
 // ─── Request interceptor: attach JWT ─────────────────────────────────────────
 api.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('echoes_token');
+    const token = localStorage.getItem('access_token') || localStorage.getItem('echoes_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -28,6 +28,7 @@ api.interceptors.response.use(
       typeof window !== 'undefined' &&
       error?.response?.status === 401
     ) {
+      localStorage.removeItem('access_token');
       localStorage.removeItem('echoes_token');
       document.cookie = 'echoes_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       window.location.href = '/auth';
