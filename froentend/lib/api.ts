@@ -30,6 +30,7 @@ api.interceptors.response.use(
     ) {
       localStorage.removeItem('access_token');
       localStorage.removeItem('echoes_token');
+      localStorage.removeItem('refresh_token');
       document.cookie = 'echoes_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       window.location.href = '/auth';
     }
@@ -46,6 +47,9 @@ export const apiService = {
 
   getMe: () =>
     api.get('/api/auth/me/'),
+
+  logoutUser: (refresh?: string | null) =>
+    api.post('/api/auth/logout/', refresh ? { refresh } : {}),
 };
 
 export default api;

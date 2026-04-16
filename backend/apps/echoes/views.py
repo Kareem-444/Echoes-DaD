@@ -61,6 +61,14 @@ def echo_list_create(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_echoes(request):
+    echoes = Echo.objects.filter(author=request.user).select_related('author').order_by('-created_at')
+    serializer = EchoSerializer(echoes, many=True)
+    return Response(serializer.data)
+
+
 class BoostEchoView(APIView):
     permission_classes = [IsAuthenticated]
 

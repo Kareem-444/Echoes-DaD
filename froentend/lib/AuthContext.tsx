@@ -12,7 +12,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUser: (partial: Partial<User>) => void;
 }
 
@@ -40,6 +40,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         } catch {
           localStorage.removeItem('access_token');
           localStorage.removeItem('echoes_token');
+          localStorage.removeItem('refresh_token');
           setToken(null);
         }
       }
@@ -56,9 +57,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(accessToken);
   };
 
-  const setAuthData = async (data: { access?: string; token?: string }) => {
+  const persistRefreshToken = (refreshToken?: string) => {
+    if (!refreshToken) return;
+    localStorage.setItem('refresh_token', refreshToken);
+  };
+
+  const clearLocalAuthState = () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('echoes_token');
+    localStorage.removeItem('refresh_token');
+    document.cookie = 'echoes_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    setToken(null);
+    setUser(null);
+  };
+
+  const setAuthData = async (data: { access?: string; token?: string; refresh?: string }) => {
     const accessToken = data.access ?? data.token ?? '';
     if (accessToken) persistToken(accessToken);
+    persistRefreshToken(data.refresh);
 
     const meResponse = await apiService.getMe();
     setUser(meResponse.data as User);
@@ -74,12 +90,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await setAuthData(response.data);
   };
 
-  const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('echoes_token');
-    document.cookie = 'echoes_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-    setToken(null);
-    setUser(null);
+  const logout = async () => {
+    const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null;
+
+    try {
+      await apiService.logoutUser(refreshToken);
+    } catch {
+      // We still clear local auth state to guarantee frontend logout.
+    }
+
+    clearLocalAuthState();
     router.push('/auth');
   };
 

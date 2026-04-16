@@ -36,9 +36,7 @@ export default function ProfilePage() {
     
     const fetchEchoes = async () => {
       try {
-        const data = await userService.getMyEchoes(user.id);
-        // Sort descending by created_at just in case
-        data.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        const data = await userService.getMyEchoes();
         setEchoes(data);
       } catch {
         showToast('Failed to load your echoes.', 'error');

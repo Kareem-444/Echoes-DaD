@@ -3,6 +3,7 @@ from . import views
 
 urlpatterns = [
     path('', views.echo_list_create, name='echo-list-create'),
+    path('my/', views.my_echoes, name='my-echoes'),
     path('<uuid:echo_id>/boost/', views.BoostEchoView.as_view(), name='boost-echo'),
     path('<uuid:echo_id>/resonate/', views.resonate, name='echo-resonate'),
     path('<uuid:echo_id>/', views.echo_detail, name='echo-detail'),
