@@ -1,31 +1,42 @@
 'use client';
 
+import type { AxiosError } from 'axios';
 import React, { useEffect, useState, useRef, use } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AuthGuard } from '@/components/AuthGuard';
-import { chatService } from '@/lib/services/chatService';
 import { useAuth } from '@/lib/AuthContext';
 import { useToast } from '@/lib/ToastContext';
 import { Modal } from '@/components/Modal';
+import { useChatSocket } from '@/lib/chat/chatSocketStub';
 import api from '@/lib/api';
-import type { Message } from '@/lib/types';
+
+interface MatchDetail {
+  user1: { id: string };
+  user2: { id: string };
+  is_active: boolean;
+  is_blocked: boolean;
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  const axiosError = error as AxiosError<{ detail?: string }> | undefined;
+  return axiosError?.response?.data?.detail || fallback;
+}
 
 export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const matchId = resolvedParams.id;
   
-  const [messages, setMessages] = useState<Message[]>([]);
   const [content, setContent] = useState('');
-  const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const { user, updateUser } = useAuth();
   const { showToast } = useToast();
   const router = useRouter();
+  const { messages, sendMessage, isConnected, loading, loadError } = useChatSocket(matchId);
 
-  const [matchData, setMatchData] = useState<any>(null);
+  const [matchData, setMatchData] = useState<MatchDetail | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [blockModalOpen, setBlockModalOpen] = useState(false);
   const [unmatchModalOpen, setUnmatchModalOpen] = useState(false);
@@ -51,25 +62,17 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
   }, [matchId]);
 
   useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const data = await chatService.getMessages(matchId);
-        setMessages(data);
-      } catch {
-        showToast('Failed to load chat history.', 'error');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchMessages();
-  }, [matchId, showToast]);
-
-  useEffect(() => {
     // Auto-scroll to bottom on new messages
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  useEffect(() => {
+    if (loadError) {
+      showToast(loadError, 'error');
+    }
+  }, [loadError, showToast]);
 
   const getOtherUser = () => {
     if (!matchData || !user) return null;
@@ -82,7 +85,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     setActionLoading(true);
     try {
       await api.post(`/api/users/${otherUser.id}/block/`);
-      setMatchData((prev: any) => ({ ...prev, is_blocked: true }));
+      setMatchData((prev) => (prev ? { ...prev, is_blocked: true } : prev));
       setBlockModalOpen(false);
       showToast('User blocked. Chat is now read-only.', 'success');
     } catch {
@@ -100,7 +103,7 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
       if (!unmatchOnly) {
         router.push('/matches');
       } else {
-        setMatchData((prev: any) => ({ ...prev, is_active: false }));
+        setMatchData((prev) => (prev ? { ...prev, is_active: false } : prev));
         setUnmatchModalOpen(false);
       }
     } catch {
@@ -125,12 +128,16 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
     setContent('');
 
     try {
-      const newMsg = await chatService.sendMessage(matchId, originalContent.trim());
-      setMessages((prev) => [...prev, newMsg]);
-      updateUser({ token_balance: user.token_balance - 5 });
-    } catch (err: any) {
+      const result = await sendMessage(originalContent.trim());
+      updateUser({
+        token_balance:
+          result.newTokenBalance ?? Math.max(0, user.token_balance - 5),
+      });
+    } catch (error: unknown) {
       setContent(originalContent); // restore input
-      const msg = err?.response?.data?.detail || 'Failed to send message.';
+      const fallback =
+        error instanceof Error ? error.message : 'Failed to send message.';
+      const msg = getErrorMessage(error, fallback);
       showToast(msg, 'error');
     } finally {
       setSending(false);
@@ -171,6 +178,9 @@ export default function ChatPage({ params }: { params: Promise<{ id: string }> }
                       Resonating
                     </span>
                   )}
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isConnected ? 'bg-primary/10 text-primary' : 'bg-surface-container-high text-on-surface-variant'}`}>
+                    {isConnected ? 'Live' : 'REST fallback'}
+                  </span>
                 </div>
               </div>
             </div>

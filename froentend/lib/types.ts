@@ -35,6 +35,13 @@ export interface Echo {
   resonance_count: number;
   mood?: string | null;
   expires_at?: string | null;
+  is_boosted: boolean;
+  boost_count: number;
+}
+
+export interface ResonateEchoResponse extends Echo {
+  milestone_reached?: boolean;
+  milestone_value?: number;
 }
 
 // ─── Match ────────────────────────────────────────────────────────────────────
@@ -78,6 +85,13 @@ export interface DailyRewardResponse {
   detail: string;
   balance: number;
   transaction: TokenTransaction;
+}
+
+export interface BoostEchoResponse {
+  detail: string;
+  new_expires_at: string;
+  new_token_balance: number;
+  boost_count: number;
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────

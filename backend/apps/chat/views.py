@@ -1,4 +1,3 @@
-from django.db.models import Q
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from rest_framework import status
@@ -7,87 +6,42 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Message
-from .serializers import MessageSerializer, MessageCreateSerializer
-from apps.matches.models import Match
-from apps.tokens.models import TokenTransaction
-from apps.users.models import Block
-
-MESSAGE_TOKEN_COST = 5
+from .serializers import MessageSerializer
+from .services import ChatServiceError, get_match_for_user, send_match_message
 
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def chat_messages(request, match_id):
-    # Verify the match exists and this user is a participant
     try:
-        match = Match.objects.get(id=match_id)
-    except Match.DoesNotExist:
-        return Response({'detail': 'Match not found.'}, status=status.HTTP_404_NOT_FOUND)
-
-    if request.user not in (match.user1, match.user2):
-        return Response({'detail': 'You are not a participant in this match.'}, status=status.HTTP_403_FORBIDDEN)
+        match = get_match_for_user(match_id, request.user)
+    except ChatServiceError as exc:
+        return Response(exc.detail, status=exc.status_code)
 
     if request.method == 'GET':
         messages = Message.objects.filter(match=match).select_related('sender')
-        # Mark unread messages sent by the other user as read
         messages.exclude(sender=request.user).filter(is_read=False).update(is_read=True)
         serializer = MessageSerializer(messages, many=True)
         return Response(serializer.data)
 
-    # POST — send a message
-    if not match.is_active:
-        return Response({'detail': 'This conversation is read-only. You are unmatched.'}, status=status.HTTP_403_FORBIDDEN)
-        
-    blocked = Block.objects.filter(
-        (Q(blocker=request.user) & Q(blocked=match.user1 if match.user2 == request.user else match.user2)) |
-        (Q(blocked=request.user) & Q(blocker=match.user1 if match.user2 == request.user else match.user2))
-    ).exists()
-    
-    if blocked:
-        return Response({'detail': 'This conversation is read-only due to a block.'}, status=status.HTTP_403_FORBIDDEN)
+    try:
+        result = send_match_message(match_id, request.user, request.data)
+    except ChatServiceError as exc:
+        return Response(exc.detail, status=exc.status_code)
 
-    if request.user.token_balance < MESSAGE_TOKEN_COST:
-        return Response(
-            {'detail': f'Insufficient tokens. Sending a message costs {MESSAGE_TOKEN_COST} tokens.'},
-            status=status.HTTP_402_PAYMENT_REQUIRED
-        )
-
-    serializer = MessageCreateSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    # Deduct tokens
-    request.user.token_balance -= MESSAGE_TOKEN_COST
-    request.user.save(update_fields=['token_balance'])
-
-    # Record transaction
-    TokenTransaction.objects.create(
-        user=request.user,
-        amount=-MESSAGE_TOKEN_COST,
-        reason='connect_chat',
-    )
-
-    # Create message
-    message = Message.objects.create(
-        match=match,
-        sender=request.user,
-        content=serializer.validated_data['content'],
-    )
-
-    recipient = match.user1 if match.user2 == request.user else match.user2
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
-        f'user_{recipient.id}',
+        f"user_{result['recipient_id']}",
         {
             'type': 'send_notification',
             'payload': {
                 'type': 'chat_message',
                 'match_id': str(match.id),
                 'sender_anonymous_name': request.user.anonymous_name,
-                'content': message.content,
-                'timestamp': message.created_at.isoformat(),
+                'content': result['message_instance'].content,
+                'timestamp': result['message_instance'].created_at.isoformat(),
             },
         },
     )
 
-    return Response(MessageSerializer(message).data, status=status.HTTP_201_CREATED)
+    return Response(result['message'], status=status.HTTP_201_CREATED)

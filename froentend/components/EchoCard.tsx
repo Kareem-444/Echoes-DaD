@@ -11,8 +11,15 @@ interface EchoCardProps {
   animationDelay: string;
   onResonate?: (echoId: string) => void;
   onReport?: (echoId: string, reason: string) => void;
+  onBoost?: (echoId: string) => void;
   mood?: string | null;
   expiresAt?: string | null;
+  isOwnEcho?: boolean;
+  isBoosted?: boolean;
+  boostCount?: number;
+  isBoosting?: boolean;
+  boostDisabled?: boolean;
+  boostTooltip?: string;
 }
 
 const moodEmojiMap: Record<string, string> = {
@@ -37,8 +44,15 @@ export const EchoCard: React.FC<EchoCardProps> = ({
   animationDelay,
   onResonate,
   onReport,
+  onBoost,
   mood,
   expiresAt,
+  isOwnEcho = false,
+  isBoosted = false,
+  boostCount = 0,
+  isBoosting = false,
+  boostDisabled = false,
+  boostTooltip,
 }) => {
   const [resonated, setResonated] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -177,6 +191,33 @@ export const EchoCard: React.FC<EchoCardProps> = ({
         <p className={`text-[10px] font-label font-bold tracking-widest uppercase mb-6 transition-colors duration-500 ${isUrgent ? 'text-error animate-pulse' : 'text-on-surface-variant opacity-40'}`}>
           {timeLeft}
         </p>
+      )}
+      {isOwnEcho && onBoost && (
+        <div className="flex items-center justify-between mb-5 gap-3">
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-outline">
+            {isBoosted && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 font-bold text-primary">
+                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>
+                  bolt
+                </span>
+                Boosted {boostCount > 0 ? `x${boostCount}` : ''}
+              </span>
+            )}
+          </div>
+          <span title={boostDisabled ? boostTooltip : 'Boost this echo'}>
+            <button
+              type="button"
+              onClick={() => onBoost(echoId)}
+              disabled={boostDisabled || isBoosting}
+              className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-semibold text-primary transition-all hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <span className="material-symbols-outlined text-base" style={{ fontVariationSettings: "'FILL' 1" }}>
+                {isBoosting ? 'hourglass_top' : 'rocket_launch'}
+              </span>
+              {isBoosting ? 'Boosting...' : 'Boost'}
+            </button>
+          </span>
+        </div>
       )}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2 text-secondary font-medium px-4 py-2 bg-secondary-container/40 resonance-badge rounded-full transition-transform hover:scale-105">

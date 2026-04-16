@@ -1,5 +1,6 @@
 'use client';
 
+import type { AxiosError } from 'axios';
 import { useEffect, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { EchoCard } from '@/components/EchoCard';
@@ -8,10 +9,18 @@ import { Navbar } from '@/components/Navbar';
 import { BottomNav } from '@/components/BottomNav';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { AuthGuard } from '@/components/AuthGuard';
+import { useAuth } from '@/lib/AuthContext';
 import { echoService } from '@/lib/services/echoService';
 import { useToast } from '@/lib/ToastContext';
 import api from '@/lib/api';
 import type { Echo } from '@/lib/types';
+
+const BOOST_COST = 25;
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  const axiosError = error as AxiosError<{ detail?: string }> | undefined;
+  return axiosError?.response?.data?.detail || fallback;
+}
 
 function formatTimeAgo(dateString: string): string {
   const diffSeconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
@@ -26,21 +35,25 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [milestoneData, setMilestoneData] = useState<{ value: number; content: string; author: string } | null>(null);
+  const [boostingEchoId, setBoostingEchoId] = useState<string | null>(null);
   const { showToast } = useToast();
+  const { user, updateUser } = useAuth();
+
+  const fetchEchoes = useCallback(async () => {
+    try {
+      const data = await echoService.getEchoes();
+      setEchoes(data);
+      setError(null);
+    } catch {
+      setError('Failed to load echoes. Please try again later.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchEchoes = async () => {
-      try {
-        const data = await echoService.getEchoes();
-        setEchoes(data);
-      } catch {
-        setError('Failed to load echoes. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchEchoes();
-  }, []);
+  }, [fetchEchoes]);
 
   const handleResonate = useCallback(async (echoId: string) => {
     // Optimistic update
@@ -79,11 +92,39 @@ export default function FeedPage() {
     try {
       await api.post(`/api/echoes/${echoId}/report/`, { reason });
       showToast("Echo reported. We'll review it shortly.", "success");
-    } catch (err: any) {
-      const msg = err?.response?.data?.detail || "Failed to report echo.";
+    } catch (error: unknown) {
+      const msg = getErrorMessage(error, "Failed to report echo.");
       showToast(msg, "error");
     }
   }, [showToast]);
+
+  const handleBoost = useCallback(async (echoId: string) => {
+    if (!user) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Boost this echo? This extends its lifetime by 24 hours and costs ${BOOST_COST} tokens.`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setBoostingEchoId(echoId);
+
+    try {
+      const response = await echoService.boostEcho(echoId);
+      updateUser({ token_balance: response.new_token_balance });
+      await fetchEchoes();
+      showToast(response.detail, 'success');
+    } catch (error: unknown) {
+      const msg = getErrorMessage(error, 'Failed to boost echo.');
+      showToast(msg, 'error');
+    } finally {
+      setBoostingEchoId(null);
+    }
+  }, [fetchEchoes, showToast, updateUser, user]);
 
   return (
     <AuthGuard>
@@ -110,7 +151,10 @@ export default function FeedPage() {
                 <span className="material-symbols-outlined text-4xl text-error mb-3 block">error_outline</span>
                 <p className="text-error font-medium">{error}</p>
                 <button
-                  onClick={() => { setError(null); setLoading(true); echoService.getEchoes().then(setEchoes).catch(() => setError('Failed to load echoes.')).finally(() => setLoading(false)); }}
+                  onClick={() => {
+                    setLoading(true);
+                    fetchEchoes();
+                  }}
                   className="mt-4 text-primary text-sm font-semibold hover:underline"
                 >
                   Try again
@@ -136,8 +180,15 @@ export default function FeedPage() {
                   animationDelay={`${(0.2 + (idx % 5) * 0.1).toFixed(1)}s`}
                   onResonate={handleResonate}
                   onReport={handleReport}
+                  onBoost={handleBoost}
                   mood={echo.mood}
                   expiresAt={echo.expires_at}
+                  isOwnEcho={echo.author.id === user?.id}
+                  isBoosted={echo.is_boosted}
+                  boostCount={echo.boost_count}
+                  isBoosting={boostingEchoId === echo.id}
+                  boostDisabled={(user?.token_balance ?? 0) < BOOST_COST}
+                  boostTooltip="Not enough tokens"
                 />
               ))
             )}
