@@ -1,5 +1,12 @@
 import { NextResponse } from 'next/server';
-import { groq } from '@/lib/groqClient';
+import type { ChatCompletionMessageParam } from 'groq-sdk/resources/chat/completions';
+
+import { getGroqClient } from '@/lib/groqClient';
+
+type ChatMessage = {
+  role: 'user' | 'assistant';
+  content: string;
+};
 
 // Use the recommended model for general tasks
 const MODEL = 'llama3-8b-8192';
@@ -21,16 +28,17 @@ export async function POST(req: Request) {
     }
 
     // Format messages for Groq API
-    const formattedMessages = [
+    const formattedMessages: ChatCompletionMessageParam[] = [
       { role: 'system', content: SYSTEM_PROMPT },
-      ...messages.map((msg: any) => ({
+      ...messages.map((msg: ChatMessage) => ({
         role: msg.role === 'user' ? 'user' : 'assistant',
         content: msg.content,
       }))
     ];
 
+    const groq = getGroqClient();
     const chatCompletion = await groq.chat.completions.create({
-      messages: formattedMessages as any,
+      messages: formattedMessages,
       model: MODEL,
       temperature: 0.7,
       max_tokens: 300,
@@ -39,8 +47,9 @@ export async function POST(req: Request) {
     const reply = chatCompletion.choices[0]?.message?.content || "I am currently lost in the void. Let's try speaking again later.";
 
     return NextResponse.json({ reply });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Groq API Error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

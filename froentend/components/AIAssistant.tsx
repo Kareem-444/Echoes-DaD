@@ -54,7 +54,15 @@ export default function AIAssistant() {
         body: JSON.stringify({ messages: apiMessages }),
       });
 
-      if (!res.ok) throw new Error('API Error');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        const errorMessage =
+          errorData?.error ||
+          `${res.status} ${res.statusText}` ||
+          'Unknown API error';
+
+        throw new Error(`API Error: ${errorMessage}`);
+      }
 
       const data = await res.json();
       
@@ -67,7 +75,7 @@ export default function AIAssistant() {
         }
       ]);
     } catch (error) {
-      console.error(error);
+      console.error('AI assistant request failed:', error);
       setMessages((prev) => [
         ...prev,
         {
