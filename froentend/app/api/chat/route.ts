@@ -9,7 +9,7 @@ type ChatMessage = {
 };
 
 // Use the recommended model for general tasks
-const MODEL = 'llama3-8b-8192';
+const MODEL = 'llama-3.3-70b-versatile';
 
 const SYSTEM_PROMPT = `You are Echo Guide, a warm and empathetic AI companion 
 inside Echoes — an anonymous social platform. Help users with:

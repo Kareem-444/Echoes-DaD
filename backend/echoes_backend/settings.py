@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'apps.matches',
     'apps.chat',
     'apps.tokens',
+    'apps.notifications',
 ]
 
 MIDDLEWARE = [
@@ -72,14 +73,25 @@ TEMPLATES = [
 WSGI_APPLICATION = 'echoes_backend.wsgi.application'
 ASGI_APPLICATION = 'echoes_backend.asgi.application'
 
-CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            'hosts': [('127.0.0.1', 6379)],
-        },
+REDIS_HOST = os.getenv('REDIS_HOST')
+REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
+USE_REDIS_CHANNEL_LAYER = os.getenv('USE_REDIS_CHANNEL_LAYER', '').lower() in {'1', 'true', 'yes'}
+
+if USE_REDIS_CHANNEL_LAYER or REDIS_HOST:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels_redis.core.RedisChannelLayer',
+            'CONFIG': {
+                'hosts': [(REDIS_HOST or '127.0.0.1', REDIS_PORT)],
+            },
+        }
     }
-}
+else:
+    CHANNEL_LAYERS = {
+        'default': {
+            'BACKEND': 'channels.layers.InMemoryChannelLayer',
+        }
+    }
 
 # Database
 DATABASES = {
