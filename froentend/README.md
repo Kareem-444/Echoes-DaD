@@ -18,6 +18,7 @@ Audit below is based on the current code in `backend/` and `froentend/`.
 - Echo creation works through `POST /api/echoes/` with 500-character content, optional mood tags, and automatic 24-hour expiry timestamps.
 - Active echo feed works through `GET /api/echoes/`, filtering expired echoes and excluding blocked-user content.
 - Echo deletion works through `DELETE /api/echoes/<uuid:echo_id>/` for the author only.
+- Boost Echo now works end to end: authors can boost their own echoes from the frontend, the flow includes confirmation and toasts, the cost is 25 tokens, and the UI syncs the live token balance after boosting.
 - Echo reporting works through `POST /api/echoes/<uuid:echo_id>/report/` with duplicate-report protection.
 - Daily prompt retrieval works through `GET /api/echoes/prompts/today/`, including a fallback prompt selection when an exact dated prompt is missing.
 - Resonating works through `POST /api/echoes/<uuid:echo_id>/resonate/`, increments counts, and returns milestone flags at 50, 100, and 500.
@@ -25,26 +26,24 @@ Audit below is based on the current code in `backend/` and `froentend/`.
 - Match detail retrieval works through `GET /api/matches/<uuid:pk>/`, including `is_active` and `is_blocked` flags.
 - Unmatch and full match deletion both work through `DELETE /api/matches/<uuid:pk>/`.
 - Chat history retrieval and message sending work through `GET/POST /api/chat/<uuid:match_id>/`.
+- Live chat now works end to end over WebSockets at `ws://<host>/ws/chat/<match_id>/?token=<jwt>`, with REST fallback when the socket is unavailable.
 - Sending a chat message deducts 5 tokens and logs a token transaction.
 - Token balance retrieval works through `GET /api/tokens/balance/`.
+- Navbar token display now uses the live balance from `GET /api/tokens/balance/` rather than hard-coded placeholder values.
 - Daily token claim works through `POST /api/tokens/daily/`.
+- Logout now calls `POST /api/auth/logout/` with the refresh token before clearing frontend auth state.
+- Profile "My Echoes" now uses `GET /api/echoes/my/` and returns the user's full echo history, including expired echoes.
+- Frontend avatar rendering now consistently reads `avatar_shape` and `avatar_color` from backend responses.
 - AI assistant request flow is implemented in the frontend and server route, and now uses the current Groq model `llama-3.3-70b-versatile`.
 - Global notification WebSocket transport is implemented at `ws://<host>/ws/notifications/?token=<jwt>`.
 - Realtime toast notifications are wired for `chat_message`, `new_match`, and `resonance_milestone`.
 
 ### 🔄 In progress / partially implemented
-- Boost Echo is implemented on the backend only: model fields, migration, `POST /api/echoes/<uuid:echo_id>/boost/`, token deduction/logging, and boosted feed ordering exist, but there is no frontend service, button, or card UI for boosting yet.
-- Realtime notifications are only partially surfaced in the UI: users receive global toast notifications, but the actual chat thread still uses REST polling/load-send behavior and does not insert incoming messages live into the open conversation.
-- `froentend/lib/chat/chatSocketStub.ts` is still an explicit future stub for match-level live chat sockets.
-- Logout is only partially complete end to end: the backend can blacklist a refresh token if one is sent, but the frontend logout flow only clears local auth state and does not call `POST /api/auth/logout/`.
 - Blocking is only partially documented/implemented as a product feature: `POST /api/users/<uuid:user_id>/block/` blocks a user, but there is no unblock endpoint.
-- Profile "My Echoes" is only partially correct: the frontend fetches the public active feed and filters client-side by author, so it does not show expired echoes or a true private full history.
 - The welcome screen is partially wired: it reads the user's anonymous name and token count, but the displayed echo/resonance stats are hard-coded to `0`, and the identity artwork is decorative rather than using the real avatar shape/color system.
-- Token display is inconsistent across the frontend: some areas use live balances, while navbar badges/buttons are decorative or hard-coded, including the `120` token pill in the matches navbar.
 - Daily reward behavior is implemented, but it is once per calendar date, not a strict rolling 24-hour window.
 - WebSocket infrastructure supports Redis, but the backend currently falls back to `InMemoryChannelLayer` when Redis env vars are absent.
 - The feed/profile TypeScript models do not fully match the backend payload shape, which is why some frontend data handling relies on loose typing.
-- The feed page includes a duplicate `avatarVariant` prop and uses `echo.author.avatar`, while the backend actually returns `avatar_shape`; this is a code-quality mismatch that makes feed avatar rendering unreliable.
 - The AI assistant works through a single request/response route, but it has no persistence, no streaming, and no feature-specific action integrations.
 - The frontend still contains unused legacy scaffolding such as `froentend/src/app/*`, `froentend/lib/auth.tsx`, and `froentend/lib/mockData.ts`.
 
