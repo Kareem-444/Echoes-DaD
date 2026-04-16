@@ -131,8 +131,8 @@ export default function FeedPage() {
                   timeAgo={formatTimeAgo(echo.created_at)}
                   content={echo.content}
                   resonances={echo.resonance_count}
-                  avatarVariant={echo.author.avatar}
-                   avatarVariant={echo.author.avatar}
+                  avatarShape={echo.author.avatar_shape}
+                  avatarColor={echo.author.avatar_color}
                   animationDelay={`${(0.2 + (idx % 5) * 0.1).toFixed(1)}s`}
                   onResonate={handleResonate}
                   onReport={handleReport}

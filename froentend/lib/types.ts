@@ -16,8 +16,15 @@ export interface User {
 // ─── Echo ─────────────────────────────────────────────────────────────────────
 
 export interface EchoAuthor {
+  id: string;
+  email: string;
   anonymous_name: string;
-  avatar: 'circle' | 'hexagon' | 'triangle' | 'square';
+  avatar_shape: 'circle' | 'hexagon' | 'triangle' | 'square';
+  avatar_color: string;
+  token_balance: number;
+  echoes_shared: number;
+  resonances: number;
+  created_at: string;
 }
 
 export interface Echo {

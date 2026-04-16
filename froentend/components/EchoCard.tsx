@@ -6,7 +6,8 @@ interface EchoCardProps {
   timeAgo: string;
   content: string;
   resonances: number;
-  avatarVariant: 'circle' | 'hexagon' | 'triangle' | 'square';
+  avatarShape: 'circle' | 'hexagon' | 'triangle' | 'square';
+  avatarColor: string;
   animationDelay: string;
   onResonate?: (echoId: string) => void;
   onReport?: (echoId: string, reason: string) => void;
@@ -31,7 +32,8 @@ export const EchoCard: React.FC<EchoCardProps> = ({
   timeAgo,
   content,
   resonances,
-  avatarVariant,
+  avatarShape,
+  avatarColor,
   animationDelay,
   onResonate,
   onReport,
@@ -86,30 +88,33 @@ export const EchoCard: React.FC<EchoCardProps> = ({
   };
 
   const renderAvatar = () => {
-    switch (avatarVariant) {
+    const outerStyle = { backgroundColor: `${avatarColor}22` };
+    const innerStyle = { backgroundColor: avatarColor };
+
+    switch (avatarShape) {
       case 'circle':
         return (
-          <div className="w-12 h-12 bg-primary-fixed rounded-full flex items-center justify-center flex-shrink-0">
-            <div className="w-6 h-6 bg-primary rounded-full opacity-60" />
+          <div className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0" style={outerStyle}>
+            <div className="w-6 h-6 rounded-full opacity-70" style={innerStyle} />
           </div>
         );
       case 'hexagon':
         return (
-          <div className="w-12 h-12 bg-secondary-container rounded-lg flex items-center justify-center rotate-12 flex-shrink-0">
-            <div className="w-6 h-6 bg-secondary asymmetric-hexagon opacity-60" />
+          <div className="w-12 h-12 rounded-lg flex items-center justify-center rotate-12 flex-shrink-0" style={outerStyle}>
+            <div className="w-6 h-6 asymmetric-hexagon opacity-70" style={innerStyle} />
           </div>
         );
       case 'triangle':
         return (
-          <div className="w-12 h-12 bg-tertiary-fixed flex items-center justify-center flex-shrink-0" style={{ clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}>
-            <div className="w-4 h-4 bg-tertiary opacity-40 mt-4" />
+          <div className="w-12 h-12 flex items-center justify-center flex-shrink-0" style={{ ...outerStyle, clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)' }}>
+            <div className="w-4 h-4 opacity-60 mt-4" style={innerStyle} />
           </div>
         );
       case 'square':
         return (
-          <div className="w-12 h-12 bg-primary-fixed-dim rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-            <div className="w-10 h-10 border-2 border-primary border-dotted rounded-full flex items-center justify-center">
-              <div className="w-4 h-4 bg-primary-container rounded-sm rotate-45" />
+          <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={outerStyle}>
+            <div className="w-10 h-10 border-2 border-dotted rounded-full flex items-center justify-center" style={{ borderColor: avatarColor }}>
+              <div className="w-4 h-4 rounded-sm rotate-45 opacity-80" style={innerStyle} />
             </div>
           </div>
         );

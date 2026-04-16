@@ -1,7 +1,9 @@
 'use client';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/lib/AuthContext';
+import { tokenService } from '@/lib/services/tokenService';
 
 interface NavbarProps {
   variant?: 'feed' | 'matches' | 'profile' | 'write';
@@ -9,6 +11,41 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ variant = 'feed' }) => {
   const pathname = usePathname();
+  const { user } = useAuth();
+  const [liveTokenBalance, setLiveTokenBalance] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!user) {
+      setLiveTokenBalance(null);
+      return;
+    }
+
+    setLiveTokenBalance(user.token_balance);
+
+    let isMounted = true;
+    tokenService
+      .getBalance()
+      .then((data) => {
+        if (isMounted) {
+          setLiveTokenBalance(data.balance);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setLiveTokenBalance(user.token_balance);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      setLiveTokenBalance(user.token_balance);
+    }
+  }, [user?.token_balance, user]);
 
   if (variant === 'write') {
     return (
@@ -51,7 +88,9 @@ export const Navbar: React.FC<NavbarProps> = ({ variant = 'feed' }) => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-container/10 rounded-full">
               <span className="material-symbols-outlined text-[#3b309e] text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>toll</span>
-              <span className="text-xs font-bold text-[#3b309e] font-label">120</span>
+              <span className="text-xs font-bold text-[#3b309e] font-label">
+                {liveTokenBalance ?? user?.token_balance ?? 0}
+              </span>
             </div>
             <div className="hidden md:flex items-center gap-8 text-[#474553]">
               <Link href="/" className={`hover:opacity-80 transition-opacity font-headline text-sm ${pathname === '/' ? 'text-[#3b309e] font-bold' : ''}`}>Feed</Link>

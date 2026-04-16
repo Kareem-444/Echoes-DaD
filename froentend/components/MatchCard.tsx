@@ -8,10 +8,9 @@ interface MatchCardProps {
   harmony: number;
   excerpt: string;
   sharedAgo: string;
-  avatarVariant: 'hexagon' | 'circle' | 'triangle';
+  avatarShape: 'hexagon' | 'circle' | 'triangle' | 'square';
+  avatarColor: string;
   icon: string;
-  colorClass: 'text-primary' | 'text-secondary' | 'text-tertiary';
-  bgClass: 'bg-primary-fixed' | 'bg-secondary-container' | 'bg-tertiary-fixed';
   onConnect: (matchId: string) => void;
 }
 
@@ -22,38 +21,49 @@ export const MatchCard: React.FC<MatchCardProps> = ({
   harmony,
   excerpt,
   sharedAgo,
-  avatarVariant,
+  avatarShape,
+  avatarColor,
   icon,
-  colorClass,
-  bgClass,
   onConnect,
 }) => {
   const renderAvatar = () => {
-    switch (avatarVariant) {
+    const outerStyle = { backgroundColor: `${avatarColor}22` };
+    const innerStyle = { color: avatarColor };
+
+    switch (avatarShape) {
       case 'hexagon':
         return (
-          <div className={`w-16 h-16 rounded-full ${bgClass} flex items-center justify-center overflow-hidden relative`}>
-            <div className="w-10 h-10 bg-primary-container rounded-lg rotate-45 opacity-40" />
+          <div className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden relative" style={outerStyle}>
+            <div className="w-10 h-10 rounded-lg rotate-45 opacity-40" style={{ backgroundColor: avatarColor }} />
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className={`material-symbols-outlined ${colorClass} text-3xl`}>{icon}</span>
+              <span className="material-symbols-outlined text-3xl" style={innerStyle}>{icon}</span>
             </div>
           </div>
         );
       case 'circle':
         return (
-          <div className={`w-16 h-16 rounded-full ${bgClass} flex items-center justify-center overflow-hidden relative`}>
-            <div className="w-12 h-12 border-4 border-secondary/20 rounded-full" />
+          <div className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden relative" style={outerStyle}>
+            <div className="w-12 h-12 border-4 rounded-full" style={{ borderColor: `${avatarColor}66` }} />
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className={`material-symbols-outlined ${colorClass} text-3xl`}>{icon}</span>
+              <span className="material-symbols-outlined text-3xl" style={innerStyle}>{icon}</span>
             </div>
           </div>
         );
       case 'triangle':
         return (
-          <div className={`w-16 h-16 rounded-full ${bgClass} flex items-center justify-center overflow-hidden relative`}>
-            <div className="w-8 h-8 bg-tertiary rounded-full animate-pulse opacity-30" />
+          <div className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden relative" style={outerStyle}>
+            <div className="w-8 h-8 rounded-full animate-pulse opacity-30" style={{ backgroundColor: avatarColor }} />
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className={`material-symbols-outlined ${colorClass} text-3xl`}>{icon}</span>
+              <span className="material-symbols-outlined text-3xl" style={innerStyle}>{icon}</span>
+            </div>
+          </div>
+        );
+      case 'square':
+        return (
+          <div className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden relative" style={outerStyle}>
+            <div className="w-9 h-9 rounded-md rotate-12 opacity-45" style={{ backgroundColor: avatarColor }} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="material-symbols-outlined text-3xl" style={innerStyle}>{icon}</span>
             </div>
           </div>
         );
@@ -69,7 +79,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({
         <div className="flex-1">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <h3 className={`font-headline font-bold text-lg ${colorClass}`}>{username}</h3>
+              <h3 className="font-headline font-bold text-lg" style={{ color: avatarColor }}>{username}</h3>
               <span className="text-xs font-label text-on-surface-variant">Matched via: &quot;{matchedVia}&quot;</span>
             </div>
             <div className="flex items-center gap-1 text-secondary font-bold text-sm animate-subtle-pulse">

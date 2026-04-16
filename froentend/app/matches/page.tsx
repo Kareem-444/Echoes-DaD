@@ -12,10 +12,7 @@ import { useToast } from '@/lib/ToastContext';
 import { useAuth } from '@/lib/AuthContext';
 import type { Match } from '@/lib/types';
 
-const AVATAR_VARIANTS = ['hexagon', 'circle', 'triangle'] as const;
 const ICON_MAP = ['filter_vintage', 'all_inclusive', 'change_history'];
-const COLOR_CLASSES = ['text-primary', 'text-secondary', 'text-tertiary'] as const;
-const BG_CLASSES = ['bg-primary-fixed', 'bg-secondary-container', 'bg-tertiary-fixed'] as const;
 
 function formatTimeAgo(dateString: string): string {
   const diffSeconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
@@ -149,10 +146,9 @@ export default function MatchesPage() {
                     harmony={match.harmony_score}
                     excerpt={partnerEcho.content}
                     sharedAgo={formatTimeAgo(match.created_at)}
-                    avatarVariant={AVATAR_VARIANTS[variant]}
+                    avatarShape={partner.avatar_shape}
+                    avatarColor={partner.avatar_color}
                     icon={ICON_MAP[variant]}
-                    colorClass={COLOR_CLASSES[variant]}
-                    bgClass={BG_CLASSES[variant]}
                     onConnect={handleConnect}
                   />
                 );
