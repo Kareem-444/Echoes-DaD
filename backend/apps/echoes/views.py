@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from django.utils import timezone
 from .models import Echo, Report, DailyPrompt
 from .serializers import EchoSerializer, EchoCreateSerializer, DailyPromptSerializer
+from apps.notifications.services import create_notification_for_user
 from apps.users.models import Block
 from apps.tokens.models import TokenTransaction
 
@@ -149,16 +150,18 @@ def resonate(request, echo_id):
 
     if milestone_reached:
         channel_layer = get_channel_layer()
+        payload = {
+            'type': 'resonance_milestone',
+            'echo_id': str(echo.id),
+            'milestone': current_count,
+            'echo_preview': build_echo_preview(echo.content),
+        }
+        create_notification_for_user(echo.author_id, payload)
         async_to_sync(channel_layer.group_send)(
             f'user_{echo.author_id}',
             {
                 'type': 'send_notification',
-                'payload': {
-                    'type': 'resonance_milestone',
-                    'echo_id': str(echo.id),
-                    'milestone': current_count,
-                    'echo_preview': build_echo_preview(echo.content),
-                },
+                'payload': payload,
             },
         )
     

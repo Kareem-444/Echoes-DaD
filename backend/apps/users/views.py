@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, Block
-from .serializers import GoogleAuthSerializer, LoginSerializer, RegisterSerializer, UserSerializer
+from .serializers import GoogleAuthSerializer, LoginSerializer, RegisterSerializer, UserSerializer, UserSettingsSerializer
 
 
 def get_tokens_for_user(user):
@@ -134,9 +134,21 @@ def logout(request):
     return Response({'detail': 'Successfully logged out.'}, status=status.HTTP_200_OK)
 
 
-@api_view(['GET'])
+@api_view(['GET', 'PATCH', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def me(request):
+    if request.method == 'PATCH':
+        serializer = UserSettingsSerializer(request.user, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.save()
+        return Response(UserSerializer(request.user).data, status=status.HTTP_200_OK)
+
+    if request.method == 'DELETE':
+        request.user.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     serializer = UserSerializer(request.user)
     return Response(serializer.data)
 

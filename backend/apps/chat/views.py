@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from .models import Message
 from .serializers import MessageSerializer
 from .services import ChatServiceError, get_match_for_user, send_match_message
+from apps.notifications.services import create_notification_for_user
 
 
 @api_view(['GET', 'POST'])
@@ -30,17 +31,19 @@ def chat_messages(request, match_id):
         return Response(exc.detail, status=exc.status_code)
 
     channel_layer = get_channel_layer()
+    payload = {
+        'type': 'chat_message',
+        'match_id': str(match.id),
+        'sender_anonymous_name': request.user.anonymous_name,
+        'content': result['message_instance'].content,
+        'timestamp': result['message_instance'].created_at.isoformat(),
+    }
+    create_notification_for_user(result['recipient_id'], payload)
     async_to_sync(channel_layer.group_send)(
         f"user_{result['recipient_id']}",
         {
             'type': 'send_notification',
-            'payload': {
-                'type': 'chat_message',
-                'match_id': str(match.id),
-                'sender_anonymous_name': request.user.anonymous_name,
-                'content': result['message_instance'].content,
-                'timestamp': result['message_instance'].created_at.isoformat(),
-            },
+            'payload': payload,
         },
     )
 

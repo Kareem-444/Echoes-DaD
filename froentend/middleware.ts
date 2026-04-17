@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('echoes_token')?.value;
   const { pathname } = request.nextUrl;
 
-  const protectedRoutes = ['/feed', '/write', '/matches', '/chat', '/profile', '/welcome'];
+  const protectedRoutes = ['/feed', '/write', '/matches', '/chat', '/profile', '/settings', '/welcome'];
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
 
   if (!token && isProtectedRoute) {
@@ -23,5 +23,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/auth', '/feed', '/write', '/matches', '/chat', '/profile', '/welcome'],
+  matcher: ['/auth', '/feed', '/write', '/matches', '/chat', '/profile', '/settings', '/welcome'],
 };

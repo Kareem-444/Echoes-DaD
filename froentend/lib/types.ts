@@ -1,10 +1,12 @@
 // ─── User ────────────────────────────────────────────────────────────────────
 
+export type AvatarShape = 'circle' | 'hexagon' | 'triangle' | 'square';
+
 export interface User {
   id: string;
   email: string;
   anonymous_name: string;
-  avatar_shape: 'circle' | 'hexagon' | 'triangle' | 'square';
+  avatar_shape: AvatarShape;
   avatar_color: string;
   token_balance: number;
   echoes_shared: number;
@@ -19,7 +21,7 @@ export interface EchoAuthor {
   id: string;
   email: string;
   anonymous_name: string;
-  avatar_shape: 'circle' | 'hexagon' | 'triangle' | 'square';
+  avatar_shape: AvatarShape;
   avatar_color: string;
   token_balance: number;
   echoes_shared: number;
@@ -105,6 +107,14 @@ export interface AuthResponse {
 // Notifications
 
 export type NotificationType = 'chat_message' | 'new_match' | 'resonance_milestone';
+
+export interface StoredNotification {
+  id: string;
+  type: NotificationType;
+  message: string;
+  is_read: boolean;
+  created_at: string;
+}
 
 export interface ChatMessageNotification {
   type: 'chat_message';

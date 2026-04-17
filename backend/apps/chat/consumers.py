@@ -3,6 +3,7 @@ import json
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 
+from apps.notifications.services import create_notification_for_user
 from .services import ChatServiceError, get_match_for_user, send_match_message
 
 
@@ -61,17 +62,19 @@ class ChatConsumer(AsyncWebsocketConsumer):
             },
         )
 
+        notification_payload = {
+            'type': 'chat_message',
+            'match_id': str(self.match_id),
+            'sender_anonymous_name': self.scope['user'].anonymous_name,
+            'content': result['message_instance'].content,
+            'timestamp': result['message_instance'].created_at.isoformat(),
+        }
+        await self._create_notification(result['recipient_id'], notification_payload)
         await self.channel_layer.group_send(
             f"user_{result['recipient_id']}",
             {
                 'type': 'send_notification',
-                'payload': {
-                    'type': 'chat_message',
-                    'match_id': str(self.match_id),
-                    'sender_anonymous_name': self.scope['user'].anonymous_name,
-                    'content': result['message_instance'].content,
-                    'timestamp': result['message_instance'].created_at.isoformat(),
-                },
+                'payload': notification_payload,
             },
         )
 
@@ -103,3 +106,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def _send_message(self, payload):
         return send_match_message(self.match_id, self.scope['user'], payload)
+
+    @database_sync_to_async
+    def _create_notification(self, user_id, payload):
+        create_notification_for_user(user_id, payload)

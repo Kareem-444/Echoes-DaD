@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
+import NotificationInboxButton from '@/components/NotificationInboxButton';
 import { tokenService } from '@/lib/services/tokenService';
 
 interface NavbarProps {
@@ -68,9 +69,18 @@ export const Navbar: React.FC<NavbarProps> = ({ variant = 'feed' }) => {
         <nav className="flex justify-between items-center px-6 py-4 w-full">
           <Link href="/" className="text-2xl font-bold tracking-tight text-[#3b309e] font-headline cursor-pointer hover:opacity-80 transition-opacity">Echoes</Link>
           <div className="flex items-center gap-4">
-            <button className="p-2 text-on-surface-variant hover:bg-surface-container-high rounded-full transition-all active:scale-90 duration-200">
+            <Link
+              href="/settings"
+              className={`rounded-full p-2 transition-all duration-200 active:scale-90 ${
+                pathname === '/settings'
+                  ? 'bg-primary-container/20 text-primary'
+                  : 'text-on-surface-variant hover:bg-surface-container-high'
+              }`}
+              aria-label="Open settings"
+            >
               <span className="material-symbols-outlined">settings</span>
-            </button>
+            </Link>
+            <NotificationInboxButton />
             <button className="p-2 text-[#3b309e] hover:bg-surface-container-high rounded-full transition-all active:scale-90 duration-200">
               <span className="material-symbols-outlined">toll</span>
             </button>
@@ -86,6 +96,7 @@ export const Navbar: React.FC<NavbarProps> = ({ variant = 'feed' }) => {
         <div className="flex justify-between items-center px-6 py-4 w-full max-w-5xl mx-auto">
           <div className="text-2xl font-headline font-bold tracking-tight text-[#3b309e] dark:text-[#534ab7]">Echoes</div>
           <div className="flex items-center gap-4">
+            <NotificationInboxButton />
             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-primary-container/10 rounded-full">
               <span className="material-symbols-outlined text-[#3b309e] text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>toll</span>
               <span className="text-xs font-bold text-[#3b309e] font-label">
@@ -115,6 +126,7 @@ export const Navbar: React.FC<NavbarProps> = ({ variant = 'feed' }) => {
         <Link href="/profile" className={`hover:opacity-80 transition-all active:scale-95 duration-200 ${pathname === '/profile' ? 'text-[#3b309e] font-bold' : 'text-[#474553] dark:text-[#e5e2df]'}`}>Profile</Link>
       </nav>
       <div className="flex items-center gap-4">
+        <NotificationInboxButton />
         <button className="p-2 rounded-full hover:bg-surface-container transition-all active:scale-90 duration-200">
           <span className="material-symbols-outlined text-[#3b309e]" data-icon="toll">toll</span>
         </button>

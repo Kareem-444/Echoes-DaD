@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
-from .models import User
+from .models import AVATAR_COLORS, AVATAR_SHAPE_CHOICES, User
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -9,9 +9,19 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'anonymous_name', 'avatar_shape',
             'avatar_color', 'token_balance', 'echoes_shared',
-            'resonances', 'created_at',
+            'resonances', 'created_at', 'last_daily_claim',
         ]
-        read_only_fields = ['id', 'anonymous_name', 'avatar_shape', 'avatar_color', 'created_at']
+        read_only_fields = ['id', 'email', 'anonymous_name', 'created_at', 'last_daily_claim']
+
+
+class UserSettingsSerializer(serializers.ModelSerializer):
+    avatar_shape = serializers.ChoiceField(choices=[choice[0] for choice in AVATAR_SHAPE_CHOICES], required=False)
+    avatar_color = serializers.ChoiceField(choices=AVATAR_COLORS, required=False)
+
+    class Meta:
+        model = User
+        fields = ['email', 'anonymous_name', 'avatar_shape', 'avatar_color']
+        read_only_fields = ['email', 'anonymous_name']
 
 
 class RegisterSerializer(serializers.Serializer):

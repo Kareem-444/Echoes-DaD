@@ -10,6 +10,7 @@ from rest_framework.response import Response
 from .models import Match
 from .serializers import MatchSerializer
 from apps.echoes.models import Echo
+from apps.notifications.services import create_notification_for_user
 from apps.users.models import User, Block
 
 
@@ -97,28 +98,32 @@ def generate_matches(request):
         )
         created_matches.append(match)
 
+        payload_for_user = {
+            'type': 'new_match',
+            'match_id': str(match.id),
+            'harmony_score': match.harmony_score,
+            'anonymous_name': candidate.anonymous_name,
+        }
+        create_notification_for_user(user.id, payload_for_user)
         async_to_sync(channel_layer.group_send)(
             f'user_{user.id}',
             {
                 'type': 'send_notification',
-                'payload': {
-                    'type': 'new_match',
-                    'match_id': str(match.id),
-                    'harmony_score': match.harmony_score,
-                    'anonymous_name': candidate.anonymous_name,
-                },
+                'payload': payload_for_user,
             },
         )
+        payload_for_candidate = {
+            'type': 'new_match',
+            'match_id': str(match.id),
+            'harmony_score': match.harmony_score,
+            'anonymous_name': user.anonymous_name,
+        }
+        create_notification_for_user(candidate.id, payload_for_candidate)
         async_to_sync(channel_layer.group_send)(
             f'user_{candidate.id}',
             {
                 'type': 'send_notification',
-                'payload': {
-                    'type': 'new_match',
-                    'match_id': str(match.id),
-                    'harmony_score': match.harmony_score,
-                    'anonymous_name': user.anonymous_name,
-                },
+                'payload': payload_for_candidate,
             },
         )
 
