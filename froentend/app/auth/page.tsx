@@ -1,6 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import { CredentialResponse, GoogleLogin } from '@react-oauth/google';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -297,9 +298,9 @@ export default function AuthPage() {
                   <label className="text-xs font-bold uppercase tracking-widest text-on-surface-variant">
                     Password
                   </label>
-                  <a href="#" className="text-xs font-semibold text-primary hover:underline">
+                  <Link href="/forgot-password" className="text-xs font-semibold text-primary hover:underline">
                     Forgot passphrase?
-                  </a>
+                  </Link>
                 </div>
                 <input
                   type="password"
@@ -344,7 +345,9 @@ export default function AuthPage() {
           <div className="mt-8 text-center">
             <p className="text-sm text-on-surface-variant">
               By entering, you agree to our{' '}
-              <a href="#" className="text-primary font-semibold hover:underline">Fluid Privacy</a>
+              <Link href="/privacy" className="text-primary font-semibold hover:underline">Privacy Policy</Link>
+              {' '}and{' '}
+              <Link href="/terms" className="text-primary font-semibold hover:underline">Terms of Service</Link>
             </p>
           </div>
         </div>

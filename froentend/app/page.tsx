@@ -256,15 +256,15 @@ export default function LandingPage() {
             <div className="grid grid-cols-2 gap-20">
               <div className="flex flex-col gap-4">
                 <p className="font-bold text-sm uppercase tracking-widest text-primary mb-2">Navigation</p>
-                <a href="#" className="text-on-surface-variant hover:text-primary transition-colors">Home</a>
+                <Link href="/" className="text-on-surface-variant hover:text-primary transition-colors">Home</Link>
                 <a href="#features" className="text-on-surface-variant hover:text-primary transition-colors">Features</a>
-                <a href="#" className="text-on-surface-variant hover:text-primary transition-colors">Safety</a>
+                <Link href="/safety" className="text-on-surface-variant hover:text-primary transition-colors">Safety</Link>
               </div>
               <div className="flex flex-col gap-4">
                 <p className="font-bold text-sm uppercase tracking-widest text-primary mb-2">Legal</p>
-                <a href="#" className="text-on-surface-variant hover:text-primary transition-colors">Privacy</a>
-                <a href="#" className="text-on-surface-variant hover:text-primary transition-colors">Ethics</a>
-                <a href="#" className="text-on-surface-variant hover:text-primary transition-colors">Terms</a>
+                <Link href="/privacy" className="text-on-surface-variant hover:text-primary transition-colors">Privacy</Link>
+                <Link href="/ethics" className="text-on-surface-variant hover:text-primary transition-colors">Ethics</Link>
+                <Link href="/terms" className="text-on-surface-variant hover:text-primary transition-colors">Terms</Link>
               </div>
             </div>
           </div>

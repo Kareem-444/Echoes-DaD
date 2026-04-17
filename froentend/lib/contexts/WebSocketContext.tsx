@@ -25,7 +25,7 @@ const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 3000;
 
 function buildSocketUrl(token: string) {
-  const wsHost = (process.env.NEXT_PUBLIC_WS_URL || '127.0.0.1:8000')
+  const wsHost = (process.env.NEXT_PUBLIC_WS_URL || process.env.NEXT_PUBLIC_API_URL || '')
     .replace(/^https?:\/\//, '')
     .replace(/^wss?:\/\//, '')
     .replace(/\/$/, '');
