@@ -11,6 +11,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (partial: Partial<User>) => void;
@@ -85,6 +86,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await setAuthData(response.data);
   };
 
+  const loginWithGoogle = async (idToken: string) => {
+    const response = await apiService.loginWithGoogle(idToken);
+    await setAuthData(response.data);
+  };
+
   const register = async (email: string, password: string) => {
     const response = await apiService.registerUser(email, password);
     await setAuthData(response.data);
@@ -110,7 +116,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, token, isLoading, isAuthenticated: !!user, login, register, logout, updateUser }}
+      value={{
+        user,
+        token,
+        isLoading,
+        isAuthenticated: !!user,
+        login,
+        loginWithGoogle,
+        register,
+        logout,
+        updateUser,
+      }}
     >
       {children}
     </AuthContext.Provider>

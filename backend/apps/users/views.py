@@ -1,4 +1,7 @@
+from django.conf import settings
 from django.contrib.auth import authenticate
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token as google_id_token
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -6,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import User, Block
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+from .serializers import GoogleAuthSerializer, LoginSerializer, RegisterSerializer, UserSerializer
 
 
 def get_tokens_for_user(user):
@@ -15,6 +18,30 @@ def get_tokens_for_user(user):
         'refresh': str(refresh),
         'access': str(refresh.access_token),
     }
+
+
+def verify_google_token(raw_token):
+    if not settings.GOOGLE_CLIENT_ID:
+        raise ValueError('Google OAuth is not configured.')
+
+    token_info = google_id_token.verify_oauth2_token(
+        raw_token,
+        google_requests.Request(),
+        settings.GOOGLE_CLIENT_ID,
+    )
+
+    issuer = token_info.get('iss')
+    if issuer not in {'accounts.google.com', 'https://accounts.google.com'}:
+        raise ValueError('Invalid Google token issuer.')
+
+    email = token_info.get('email')
+    if not email:
+        raise ValueError('Google account email is missing.')
+
+    if not token_info.get('email_verified', False):
+        raise ValueError('Google account email is not verified.')
+
+    return token_info
 
 
 @api_view(['POST'])
@@ -47,6 +74,43 @@ def login(request):
         return Response(
             {'detail': 'Invalid email or password.'},
             status=status.HTTP_401_UNAUTHORIZED
+        )
+
+    tokens = get_tokens_for_user(user)
+    return Response({
+        'access': tokens['access'],
+        'refresh': tokens['refresh'],
+        'user': UserSerializer(user).data,
+    }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_login(request):
+    serializer = GoogleAuthSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        token_info = verify_google_token(serializer.validated_data['id_token'])
+    except ValueError as exc:
+        return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception:
+        return Response(
+            {'detail': 'Unable to verify Google sign-in token.'},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
+
+    email = User.objects.normalize_email(token_info['email'])
+    user = User.objects.filter(email__iexact=email).first()
+
+    if user is None:
+        user = User.objects.create_user(email=email)
+
+    if not user.is_active:
+        return Response(
+            {'detail': 'This account is inactive.'},
+            status=status.HTTP_403_FORBIDDEN,
         )
 
     tokens = get_tokens_for_user(user)

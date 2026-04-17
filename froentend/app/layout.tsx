@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
-import { AuthProvider } from "@/lib/AuthContext";
-import { ToastProvider } from "@/lib/ToastContext";
-import { WebSocketProvider } from "@/lib/contexts/WebSocketContext";
 import AIAssistant from "@/components/AIAssistant";
+import AppProviders from "@/components/AppProviders";
 import NotificationListener from "@/components/NotificationListener";
 
 const plusJakartaSans = Plus_Jakarta_Sans({ 
@@ -35,15 +33,11 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
       </head>
       <body className={`${plusJakartaSans.variable} ${beVietnamPro.variable}`}>
-        <AuthProvider>
-          <WebSocketProvider>
-            <ToastProvider>
-              {children}
-              <NotificationListener />
-              <AIAssistant />
-            </ToastProvider>
-          </WebSocketProvider>
-        </AuthProvider>
+        <AppProviders>
+          {children}
+          <NotificationListener />
+          <AIAssistant />
+        </AppProviders>
       </body>
     </html>
   );

@@ -1,8 +1,70 @@
 'use client';
 import React, { useState } from 'react';
-import Link from 'next/link';
+import { CredentialResponse, GoogleLogin } from '@react-oauth/google';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
+
+function GoogleAuthSection({
+  isBusy,
+  onError,
+  onSuccess,
+}: {
+  isBusy: boolean;
+  onError: (message: string) => void;
+  onSuccess: (idToken: string) => Promise<void>;
+}) {
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 text-[11px] font-bold uppercase tracking-[0.28em] text-on-surface-variant">
+        <span className="h-px flex-1 bg-outline-variant/30" />
+        <span>or continue with</span>
+        <span className="h-px flex-1 bg-outline-variant/30" />
+      </div>
+
+      <div className="rounded-[1.75rem] border border-outline-variant/20 bg-background px-3 py-3 shadow-sm">
+        {isBusy ? (
+          <div className="flex min-h-[44px] items-center justify-center rounded-full text-sm font-semibold text-on-surface-variant">
+            Connecting to Google...
+          </div>
+        ) : (
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={(credentialResponse: CredentialResponse) => {
+                const credential = credentialResponse.credential;
+
+                if (!credential) {
+                  onError('Google sign-in did not return an ID token.');
+                  return;
+                }
+
+                void onSuccess(credential);
+              }}
+              onError={() => onError('Google sign-in failed. Please try again.')}
+              shape="pill"
+              size="large"
+              text="continue_with"
+              theme="outline"
+              width="360"
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  const responseData = (error as {
+    response?: {
+      data?: {
+        detail?: string;
+        email?: string[];
+      };
+    };
+  })?.response?.data;
+
+  return responseData?.detail || responseData?.email?.[0] || fallback;
+}
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<'signup' | 'signin'>('signup');
@@ -12,8 +74,9 @@ export default function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
 
-  const { login, register } = useAuth();
+  const { login, loginWithGoogle, register } = useAuth();
   const router = useRouter();
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -28,8 +91,8 @@ export default function AuthPage() {
     try {
       await register(email, password);
       router.push('/welcome');
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || err?.response?.data?.email?.[0] || 'Registration failed. Please try again.');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Registration failed. Please try again.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -42,10 +105,24 @@ export default function AuthPage() {
     try {
       await login(email, password);
       router.push('/feed');
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || 'Invalid email or passphrase.');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Invalid email or passphrase.'));
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleAuth = async (idToken: string) => {
+    setError(null);
+    setIsGoogleSubmitting(true);
+
+    try {
+      await loginWithGoogle(idToken);
+      router.push(activeTab === 'signup' ? '/welcome' : '/feed');
+    } catch (error: unknown) {
+      setError(getErrorMessage(error, 'Google sign-in failed. Please try again.'));
+    } finally {
+      setIsGoogleSubmitting(false);
     }
   };
 
@@ -170,6 +247,12 @@ export default function AuthPage() {
                 </p>
               </div>
 
+              <GoogleAuthSection
+                isBusy={isGoogleSubmitting}
+                onError={setError}
+                onSuccess={handleGoogleAuth}
+              />
+
               {/* Error Message */}
               {error && (
                 <div className="text-error text-sm text-center font-medium mt-2">
@@ -180,7 +263,7 @@ export default function AuthPage() {
               {/* Primary CTA */}
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isGoogleSubmitting}
                 className="w-full signature-gradient text-on-primary font-bold py-5 rounded-full shadow-lg hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:hover:scale-100 transition-all duration-300 flex items-center justify-center gap-2"
               >
                 <span>{isSubmitting ? 'Creating Identity...' : 'Create My Echo'}</span>
@@ -228,6 +311,12 @@ export default function AuthPage() {
                 />
               </div>
 
+              <GoogleAuthSection
+                isBusy={isGoogleSubmitting}
+                onError={setError}
+                onSuccess={handleGoogleAuth}
+              />
+
               {/* Error Message */}
               {error && (
                 <div className="text-error text-sm text-center font-medium mt-2">
@@ -237,7 +326,7 @@ export default function AuthPage() {
 
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isGoogleSubmitting}
                 className="w-full text-on-primary font-bold py-5 rounded-full shadow-lg hover:scale-[1.02] active:scale-95 disabled:opacity-70 disabled:hover:scale-100 transition-all duration-300 flex items-center justify-center gap-2"
                 style={{ background: 'linear-gradient(135deg, #534ab7 0%, #5dcaa5 100%)' }}
               >

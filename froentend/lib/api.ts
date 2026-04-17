@@ -45,6 +45,9 @@ export const apiService = {
   loginUser: (email: string, password: string) =>
     api.post('/api/auth/login/', { email, password }),
 
+  loginWithGoogle: (idToken: string) =>
+    api.post('/api/auth/google/', { id_token: idToken }),
+
   getMe: () =>
     api.get('/api/auth/me/'),
 
