@@ -2,6 +2,17 @@
 
 Anonymous social app built with Django + Next.js for sharing short "echoes", matching users by mood/resonance, and chatting with token-gated messaging.
 
+## Screenshots
+![Feed](../assets/screenshots/feed.png)
+
+![Login / Register](../assets/screenshots/login.png)
+
+![Profile](../assets/screenshots/profile.png)
+
+![Match / Chat](../assets/screenshots/chat.png)
+
+![Echo Creation](../assets/screenshots/write.png)
+
 ## Tech Stack
 - Backend: Django 4.2.17, Django REST Framework, SimpleJWT, PostgreSQL, Channels
 - Frontend: Next.js 14.2, React 18, TypeScript, Tailwind CSS

@@ -1,7 +1,7 @@
 'use client';
 
 import type { AxiosError } from 'axios';
-import React, { useEffect, useState, useRef, use } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { AuthGuard } from '@/components/AuthGuard';
@@ -23,10 +23,9 @@ function getErrorMessage(error: unknown, fallback: string): string {
   return axiosError?.response?.data?.detail || fallback;
 }
 
-export default function ChatPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params);
-  const matchId = resolvedParams.id;
-  
+export default function ChatPage({ params }: { params: { id: string } }) {
+  const matchId = params.id;
+
   const [content, setContent] = useState('');
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
