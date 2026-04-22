@@ -4,26 +4,13 @@ from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
 
 from apps.notifications.services import create_notification_for_user
+from echoes_backend.middleware.jwt_auth_middleware import get_user_from_token
 from .services import ChatServiceError, get_match_for_user, send_match_message
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        user = self.scope.get('user')
         self.match_id = self.scope['url_route']['kwargs']['match_id']
-
-        if not user or not user.is_authenticated:
-            await self.close(code=4001)
-            return
-
-        try:
-            await self._get_match()
-        except ChatServiceError:
-            await self.close(code=4003)
-            return
-
-        self.group_name = f'match_{self.match_id}'
-        await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
 
     async def disconnect(self, close_code):
@@ -38,6 +25,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             payload = json.loads(text_data)
         except json.JSONDecodeError:
             await self.send(text_data=json.dumps({'type': 'chat_error', 'detail': 'Invalid payload.'}))
+            return
+
+        if not getattr(self, 'is_authenticated', False):
+            await self._authenticate(payload)
             return
 
         client_id = payload.get('client_id')
@@ -88,6 +79,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 }
             )
         )
+
+    async def _authenticate(self, payload):
+        if payload.get('type') != 'authenticate':
+            await self.close(code=4001)
+            return
+
+        user = await get_user_from_token(payload.get('token'))
+        if not getattr(user, 'is_authenticated', False):
+            await self.close(code=4001)
+            return
+
+        self.scope['user'] = user
+
+        try:
+            await self._get_match()
+        except ChatServiceError:
+            await self.close(code=4003)
+            return
+
+        self.is_authenticated = True
+        self.group_name = f'match_{self.match_id}'
+        await self.channel_layer.group_add(self.group_name, self.channel_name)
+        await self.send(text_data=json.dumps({'type': 'authenticated'}))
 
     async def chat_message_event(self, event):
         await self.send(

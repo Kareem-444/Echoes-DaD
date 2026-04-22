@@ -1,10 +1,10 @@
 from rest_framework import serializers
 from .models import Message
-from apps.users.serializers import UserSerializer
+from apps.users.serializers import PublicUserSerializer
 
 
 class MessageSerializer(serializers.ModelSerializer):
-    sender = UserSerializer(read_only=True)
+    sender = PublicUserSerializer(read_only=True)
 
     class Meta:
         model = Message

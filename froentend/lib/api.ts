@@ -1,6 +1,8 @@
 import axios from 'axios';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+let accessToken: string | null = null;
+let refreshToken: string | null = null;
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -9,18 +11,31 @@ const api = axios.create({
   },
 });
 
-// ─── Request interceptor: attach JWT ─────────────────────────────────────────
+export function setAuthTokens(tokens: { access?: string | null; refresh?: string | null }) {
+  accessToken = tokens.access || null;
+  refreshToken = tokens.refresh || null;
+}
+
+export function getAccessToken() {
+  return accessToken;
+}
+
+export function getRefreshToken() {
+  return refreshToken;
+}
+
+export function clearAuthTokens() {
+  accessToken = null;
+  refreshToken = null;
+}
+
 api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('access_token') || localStorage.getItem('echoes_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
   }
   return config;
 });
 
-// ─── Response interceptor: handle 401 globally ───────────────────────────────
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -28,10 +43,7 @@ api.interceptors.response.use(
       typeof window !== 'undefined' &&
       error?.response?.status === 401
     ) {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('echoes_token');
-      localStorage.removeItem('refresh_token');
-      document.cookie = 'echoes_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      clearAuthTokens();
       window.location.href = '/auth';
     }
     return Promise.reject(error);

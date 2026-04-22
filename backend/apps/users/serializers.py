@@ -14,6 +14,13 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'email', 'anonymous_name', 'created_at', 'last_daily_claim']
 
 
+class PublicUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'anonymous_name', 'avatar_shape', 'avatar_color']
+        read_only_fields = fields
+
+
 class UserSettingsSerializer(serializers.ModelSerializer):
     avatar_shape = serializers.ChoiceField(choices=[choice[0] for choice in AVATAR_SHAPE_CHOICES], required=False)
     avatar_color = serializers.ChoiceField(choices=AVATAR_COLORS, required=False)

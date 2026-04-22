@@ -1,12 +1,12 @@
 from rest_framework import serializers
 from .models import Match
-from apps.users.serializers import UserSerializer
+from apps.users.serializers import PublicUserSerializer
 from apps.echoes.serializers import EchoSerializer
 
 
 class MatchSerializer(serializers.ModelSerializer):
-    user1 = UserSerializer(read_only=True)
-    user2 = UserSerializer(read_only=True)
+    user1 = PublicUserSerializer(read_only=True)
+    user2 = PublicUserSerializer(read_only=True)
     echo1 = EchoSerializer(read_only=True)
     echo2 = EchoSerializer(read_only=True)
 

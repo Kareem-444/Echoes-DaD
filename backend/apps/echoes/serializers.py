@@ -1,10 +1,10 @@
 from rest_framework import serializers
 from .models import Echo
-from apps.users.serializers import UserSerializer
+from apps.users.serializers import PublicUserSerializer
 
 
 class EchoSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
+    author = PublicUserSerializer(read_only=True)
 
     class Meta:
         model = Echo

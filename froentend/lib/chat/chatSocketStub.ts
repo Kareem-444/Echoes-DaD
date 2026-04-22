@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 
+import { getAccessToken } from '@/lib/api';
 import type { Message } from '@/lib/types';
 import { chatService } from '@/lib/services/chatService';
 
@@ -24,7 +25,11 @@ interface SocketMessageEvent {
   message: Message;
 }
 
-type SocketEvent = SocketAck | SocketError | SocketMessageEvent;
+interface SocketAuthenticated {
+  type: 'authenticated';
+}
+
+type SocketEvent = SocketAck | SocketError | SocketMessageEvent | SocketAuthenticated;
 
 interface SendMessageResult {
   message: Message;
@@ -37,13 +42,22 @@ interface PendingMessage {
   timeoutId: number;
 }
 
-function buildChatSocketUrl(matchId: string, token: string) {
-  const wsHost = (process.env.NEXT_PUBLIC_WS_URL || process.env.NEXT_PUBLIC_API_URL || '')
+function resolveWsHost() {
+  const configuredHost = (process.env.NEXT_PUBLIC_WS_URL || process.env.NEXT_PUBLIC_API_URL || '')
     .replace(/^https?:\/\//, '')
     .replace(/^wss?:\/\//, '')
     .replace(/\/$/, '');
 
-  return `ws://${wsHost}/ws/chat/${matchId}/?token=${encodeURIComponent(token)}`;
+  if (configuredHost) {
+    return configuredHost;
+  }
+
+  return typeof window !== 'undefined' ? window.location.host : '';
+}
+
+function buildChatSocketUrl(matchId: string) {
+  const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss' : 'ws';
+  return `${protocol}://${resolveWsHost()}/ws/chat/${matchId}/`;
 }
 
 function upsertMessage(current: Message[], incoming: Message) {
@@ -62,6 +76,7 @@ export function useChatSocket(matchId: string) {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
+  const socketAuthenticatedRef = useRef(false);
   const reconnectTimeoutRef = useRef<number | null>(null);
   const shouldReconnectRef = useRef(true);
   const pendingMessagesRef = useRef<Map<string, PendingMessage>>(new Map());
@@ -103,7 +118,7 @@ export function useChatSocket(matchId: string) {
       return;
     }
 
-    const token = localStorage.getItem('access_token') || localStorage.getItem('echoes_token');
+    const token = getAccessToken();
     if (!token) {
       setIsConnected(false);
       return;
@@ -113,11 +128,12 @@ export function useChatSocket(matchId: string) {
     const pendingMessages = pendingMessagesRef.current;
 
     const connect = () => {
-      const socket = new WebSocket(buildChatSocketUrl(matchId, token));
+      socketAuthenticatedRef.current = false;
+      const socket = new WebSocket(buildChatSocketUrl(matchId));
       socketRef.current = socket;
 
       socket.onopen = () => {
-        setIsConnected(true);
+        socket.send(JSON.stringify({ type: 'authenticate', token }));
       };
 
       socket.onmessage = (event) => {
@@ -126,6 +142,12 @@ export function useChatSocket(matchId: string) {
         try {
           payload = JSON.parse(event.data) as SocketEvent;
         } catch {
+          return;
+        }
+
+        if (payload.type === 'authenticated') {
+          socketAuthenticatedRef.current = true;
+          setIsConnected(true);
           return;
         }
 
@@ -172,6 +194,7 @@ export function useChatSocket(matchId: string) {
           socketRef.current = null;
         }
 
+        socketAuthenticatedRef.current = false;
         setIsConnected(false);
 
         if (!shouldReconnectRef.current || event.code === 4001 || event.code === 4003) {
@@ -202,6 +225,7 @@ export function useChatSocket(matchId: string) {
         socketRef.current.close();
         socketRef.current = null;
       }
+      socketAuthenticatedRef.current = false;
     };
   }, [matchId]);
 
@@ -211,7 +235,11 @@ export function useChatSocket(matchId: string) {
       throw new Error('Message cannot be empty.');
     }
 
-    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+    if (
+      socketRef.current &&
+      socketRef.current.readyState === WebSocket.OPEN &&
+      socketAuthenticatedRef.current
+    ) {
       const clientId =
         typeof crypto !== 'undefined' && 'randomUUID' in crypto
           ? crypto.randomUUID()

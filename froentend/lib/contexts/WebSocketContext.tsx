@@ -24,13 +24,22 @@ const WebSocketContext = createContext<WebSocketContextType | undefined>(undefin
 const MAX_RETRIES = 5;
 const RETRY_DELAY_MS = 3000;
 
-function buildSocketUrl(token: string) {
-  const wsHost = (process.env.NEXT_PUBLIC_WS_URL || process.env.NEXT_PUBLIC_API_URL || '')
+function resolveWsHost() {
+  const configuredHost = (process.env.NEXT_PUBLIC_WS_URL || process.env.NEXT_PUBLIC_API_URL || '')
     .replace(/^https?:\/\//, '')
     .replace(/^wss?:\/\//, '')
     .replace(/\/$/, '');
 
-  return `ws://${wsHost}/ws/notifications/?token=${encodeURIComponent(token)}`;
+  if (configuredHost) {
+    return configuredHost;
+  }
+
+  return typeof window !== 'undefined' ? window.location.host : '';
+}
+
+function buildSocketUrl() {
+  const protocol = typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'wss' : 'ws';
+  return `${protocol}://${resolveWsHost()}/ws/notifications/`;
 }
 
 export function WebSocketProvider({ children }: { children: ReactNode }) {
@@ -40,10 +49,10 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
   const reconnectAttemptsRef = useRef(0);
   const shouldReconnectRef = useRef(true);
   const listenersRef = useRef<Map<NotificationType, Set<NotificationCallback>>>(
-    new Map([
-      ['chat_message', new Set()],
-      ['new_match', new Set()],
-      ['resonance_milestone', new Set()],
+    new Map<NotificationType, Set<NotificationCallback>>([
+      ['chat_message', new Set<NotificationCallback>()],
+      ['new_match', new Set<NotificationCallback>()],
+      ['resonance_milestone', new Set<NotificationCallback>()],
     ])
   );
 
@@ -60,11 +69,7 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const storedAccessToken = localStorage.getItem('access_token');
-    const legacyToken = localStorage.getItem('echoes_token');
-    const resolvedToken = storedAccessToken || legacyToken || token;
-
-    if (!resolvedToken || !isAuthenticated) {
+    if (!token || !isAuthenticated) {
       shouldReconnectRef.current = false;
       if (reconnectTimeoutRef.current) {
         window.clearTimeout(reconnectTimeoutRef.current);
@@ -77,20 +82,24 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    localStorage.setItem('access_token', resolvedToken);
     shouldReconnectRef.current = true;
 
     const connect = () => {
-      const nextSocket = new WebSocket(buildSocketUrl(resolvedToken));
+      const nextSocket = new WebSocket(buildSocketUrl());
       socketRef.current = nextSocket;
 
       nextSocket.onopen = () => {
-        reconnectAttemptsRef.current = 0;
+        nextSocket.send(JSON.stringify({ type: 'authenticate', token }));
       };
 
       nextSocket.onmessage = (event) => {
         try {
-          const payload = JSON.parse(event.data) as NotificationPayload;
+          const payload = JSON.parse(event.data) as NotificationPayload | { type: 'authenticated' };
+          if (payload.type === 'authenticated') {
+            reconnectAttemptsRef.current = 0;
+            return;
+          }
+
           listenersRef.current.get(payload.type)?.forEach((listener) => listener(payload));
         } catch {
           return;

@@ -2,12 +2,15 @@
 
 export type AvatarShape = 'circle' | 'hexagon' | 'triangle' | 'square';
 
-export interface User {
+export interface PublicUser {
   id: string;
-  email: string;
   anonymous_name: string;
   avatar_shape: AvatarShape;
   avatar_color: string;
+}
+
+export interface User extends PublicUser {
+  email: string;
   token_balance: number;
   echoes_shared: number;
   resonances: number;
@@ -17,17 +20,7 @@ export interface User {
 
 // ─── Echo ─────────────────────────────────────────────────────────────────────
 
-export interface EchoAuthor {
-  id: string;
-  email: string;
-  anonymous_name: string;
-  avatar_shape: AvatarShape;
-  avatar_color: string;
-  token_balance: number;
-  echoes_shared: number;
-  resonances: number;
-  created_at: string;
-}
+export type EchoAuthor = PublicUser;
 
 export interface Echo {
   id: string;
@@ -50,8 +43,8 @@ export interface ResonateEchoResponse extends Echo {
 
 export interface Match {
   id: string;
-  user1: User;
-  user2: User;
+  user1: PublicUser;
+  user2: PublicUser;
   echo1: Echo;
   echo2: Echo;
   harmony_score: number;
@@ -63,7 +56,7 @@ export interface Match {
 export interface Message {
   id: string;
   match: string;
-  sender: User;
+  sender: PublicUser;
   content: string;
   is_read: boolean;
   created_at: string;
