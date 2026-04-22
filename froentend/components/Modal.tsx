@@ -9,6 +9,7 @@ interface ModalProps {
   confirmText?: string;
   cancelText?: string;
   confirmLoading?: boolean;
+  isDestructive?: boolean;
 }
 
 export const Modal: React.FC<ModalProps> = ({

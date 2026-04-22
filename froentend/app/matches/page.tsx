@@ -14,6 +14,15 @@ import type { Match } from '@/lib/types';
 
 const ICON_MAP = ['filter_vintage', 'all_inclusive', 'change_history'];
 
+function getDetailMessage(value: unknown): string | undefined {
+  if (!value || typeof value !== 'object' || !('detail' in value)) {
+    return undefined;
+  }
+
+  const detail = (value as { detail?: unknown }).detail;
+  return typeof detail === 'string' ? detail : undefined;
+}
+
 function formatTimeAgo(dateString: string): string {
   const diffSeconds = Math.floor((Date.now() - new Date(dateString).getTime()) / 1000);
   if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
@@ -50,7 +59,7 @@ export default function MatchesPage() {
     try {
       const newMatches = await matchService.generateMatches();
       if (!Array.isArray(newMatches)) {
-        showToast((newMatches as any).detail || 'No new matches right now. Share more echoes!', 'info');
+        showToast(getDetailMessage(newMatches) || 'No new matches right now. Share more echoes!', 'info');
         return;
       }
       if (newMatches.length === 0) {

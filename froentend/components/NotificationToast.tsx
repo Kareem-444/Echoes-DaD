@@ -44,7 +44,7 @@ export default function NotificationToast({ notification, onDismiss }: Notificat
 
   const style = toastStyles[notification.type];
 
-  let title = style.label;
+  let title: string = style.label;
   let body = '';
 
   if (notification.type === 'chat_message') {

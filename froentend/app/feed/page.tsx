@@ -70,7 +70,7 @@ export default function FeedPage() {
       
       if (updated.milestone_reached) {
         setMilestoneData({
-          value: updated.milestone_value,
+          value: updated.milestone_value ?? updated.resonance_count,
           content: updated.content,
           author: updated.author.anonymous_name
         });

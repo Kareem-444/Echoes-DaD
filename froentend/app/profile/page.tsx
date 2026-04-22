@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import type { AxiosError } from 'axios';
 import { Navbar } from '@/components/Navbar';
 import { BottomNav } from '@/components/BottomNav';
 import { AuthGuard } from '@/components/AuthGuard';
@@ -19,6 +20,11 @@ function formatTimeAgo(dateString: string): string {
   if (diffSeconds < 3600) return `${Math.floor(diffSeconds / 60)}m ago`;
   if (diffSeconds < 86400) return `${Math.floor(diffSeconds / 3600)}h ago`;
   return `${Math.floor(diffSeconds / 86400)}d ago`;
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  const axiosError = error as AxiosError<{ detail?: string }> | undefined;
+  return axiosError?.response?.data?.detail || fallback;
 }
 
 export default function ProfilePage() {
@@ -59,9 +65,8 @@ export default function ProfilePage() {
         last_daily_claim: new Date().toISOString().split('T')[0]
       });
       showToast(response.detail, 'success');
-    } catch (err: any) {
-      const msg = err?.response?.data?.detail || 'Failed to claim tokens.';
-      showToast(msg, 'error');
+    } catch (error: unknown) {
+      showToast(getErrorMessage(error, 'Failed to claim tokens.'), 'error');
     } finally {
       setClaiming(false);
     }

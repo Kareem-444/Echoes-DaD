@@ -112,7 +112,7 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     }
   };
 
-  const isReadOnly = matchData && (!matchData.is_active || matchData.is_blocked);
+  const isReadOnly = !!matchData && (!matchData.is_active || matchData.is_blocked);
 
   const handleSend = async () => {
     if (!content.trim() || sending || !user) return;

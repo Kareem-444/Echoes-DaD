@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
+import { getAccessToken } from '@/lib/api';
 
 type Message = {
   id: string;
@@ -47,10 +48,14 @@ export default function AIAssistant() {
         ...messages.map(m => ({ role: m.role, content: m.content })),
         { role: 'user', content: userMessage.content }
       ];
+      const accessToken = getAccessToken();
 
       const res = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
         body: JSON.stringify({ messages: apiMessages }),
       });
 
