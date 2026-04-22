@@ -61,11 +61,16 @@ function buildChatSocketUrl(matchId: string) {
 }
 
 function upsertMessage(current: Message[], incoming: Message) {
-  if (current.some((message) => message.id === incoming.id)) {
-    return current;
-  }
+  return mergeMessages(current, [incoming]);
+}
 
-  return [...current, incoming].sort(
+function mergeMessages(current: Message[], incoming: Message[]) {
+  const messagesById = new Map<string, Message>();
+  [...current, ...incoming].forEach((message) => {
+    messagesById.set(message.id, message);
+  });
+
+  return Array.from(messagesById.values()).sort(
     (left, right) => new Date(left.created_at).getTime() - new Date(right.created_at).getTime()
   );
 }
@@ -74,6 +79,8 @@ export function useChatSocket(matchId: string) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const [olderMessagesUrl, setOlderMessagesUrl] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const socketAuthenticatedRef = useRef(false);
@@ -92,7 +99,8 @@ export function useChatSocket(matchId: string) {
       try {
         const loadedMessages = await chatService.getMessages(matchId);
         if (isMounted) {
-          setMessages(loadedMessages);
+          setMessages(loadedMessages.results);
+          setOlderMessagesUrl(loadedMessages.next);
           setLoadError(null);
         }
       } catch {
@@ -112,6 +120,24 @@ export function useChatSocket(matchId: string) {
       isMounted = false;
     };
   }, [matchId]);
+
+  const loadOlderMessages = async () => {
+    if (!olderMessagesUrl || loadingOlder) {
+      return;
+    }
+
+    setLoadingOlder(true);
+    try {
+      const loadedMessages = await chatService.getMessages(matchId, olderMessagesUrl);
+      setMessages((current) => mergeMessages(current, loadedMessages.results));
+      setOlderMessagesUrl(loadedMessages.next);
+      setLoadError(null);
+    } catch {
+      setLoadError('Failed to load older messages.');
+    } finally {
+      setLoadingOlder(false);
+    }
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -275,6 +301,9 @@ export function useChatSocket(matchId: string) {
     sendMessage,
     isConnected,
     loading,
+    loadingOlder,
+    hasOlderMessages: Boolean(olderMessagesUrl),
+    loadOlderMessages,
     loadError,
   };
 }

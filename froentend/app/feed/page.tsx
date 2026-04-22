@@ -33,23 +33,41 @@ function formatTimeAgo(dateString: string): string {
 export default function FeedPage() {
   const [echoes, setEchoes] = useState<Echo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextEchoesUrl, setNextEchoesUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [milestoneData, setMilestoneData] = useState<{ value: number; content: string; author: string } | null>(null);
   const [boostingEchoId, setBoostingEchoId] = useState<string | null>(null);
   const { showToast } = useToast();
   const { user, updateUser } = useAuth();
 
-  const fetchEchoes = useCallback(async () => {
+  const fetchEchoes = useCallback(async (url?: string) => {
+    const isNextPage = Boolean(url);
+    if (isNextPage) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+
     try {
-      const data = await echoService.getEchoes();
-      setEchoes(data);
+      const data = await echoService.getEchoes(url);
+      setEchoes((current) => (isNextPage ? [...current, ...data.results] : data.results));
+      setNextEchoesUrl(data.next);
       setError(null);
     } catch {
-      setError('Failed to load echoes. Please try again later.');
+      if (isNextPage) {
+        showToast('Failed to load more echoes.', 'error');
+      } else {
+        setError('Failed to load echoes. Please try again later.');
+      }
     } finally {
-      setLoading(false);
+      if (isNextPage) {
+        setLoadingMore(false);
+      } else {
+        setLoading(false);
+      }
     }
-  }, []);
+  }, [showToast]);
 
   useEffect(() => {
     fetchEchoes();
@@ -167,30 +185,44 @@ export default function FeedPage() {
                 <p className="text-on-surface-variant/60 text-sm mt-1">Be the first to share a thought.</p>
               </div>
             ) : (
-              echoes.map((echo, idx) => (
-                <EchoCard
-                  key={echo.id}
-                  echoId={echo.id}
-                  username={echo.author.anonymous_name}
-                  timeAgo={formatTimeAgo(echo.created_at)}
-                  content={echo.content}
-                  resonances={echo.resonance_count}
-                  avatarShape={echo.author.avatar_shape}
-                  avatarColor={echo.author.avatar_color}
-                  animationDelay={`${(0.2 + (idx % 5) * 0.1).toFixed(1)}s`}
-                  onResonate={handleResonate}
-                  onReport={handleReport}
-                  onBoost={handleBoost}
-                  mood={echo.mood}
-                  expiresAt={echo.expires_at}
-                  isOwnEcho={echo.author.id === user?.id}
-                  isBoosted={echo.is_boosted}
-                  boostCount={echo.boost_count}
-                  isBoosting={boostingEchoId === echo.id}
-                  boostDisabled={(user?.token_balance ?? 0) < BOOST_COST}
-                  boostTooltip="Not enough tokens"
-                />
-              ))
+              <>
+                {echoes.map((echo, idx) => (
+                  <EchoCard
+                    key={echo.id}
+                    echoId={echo.id}
+                    username={echo.author.anonymous_name}
+                    timeAgo={formatTimeAgo(echo.created_at)}
+                    content={echo.content}
+                    resonances={echo.resonance_count}
+                    avatarShape={echo.author.avatar_shape}
+                    avatarColor={echo.author.avatar_color}
+                    animationDelay={`${(0.2 + (idx % 5) * 0.1).toFixed(1)}s`}
+                    onResonate={handleResonate}
+                    onReport={handleReport}
+                    onBoost={handleBoost}
+                    mood={echo.mood}
+                    expiresAt={echo.expires_at}
+                    isOwnEcho={echo.author.id === user?.id}
+                    isBoosted={echo.is_boosted}
+                    boostCount={echo.boost_count}
+                    isBoosting={boostingEchoId === echo.id}
+                    boostDisabled={(user?.token_balance ?? 0) < BOOST_COST}
+                    boostTooltip="Not enough tokens"
+                  />
+                ))}
+                {nextEchoesUrl && (
+                  <div className="pt-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => fetchEchoes(nextEchoesUrl)}
+                      disabled={loadingMore}
+                      className="rounded-full bg-surface-container-high px-5 py-3 text-sm font-semibold text-primary transition-colors hover:bg-surface-container-highest disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {loadingMore ? 'Loading...' : 'Load more'}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </main>

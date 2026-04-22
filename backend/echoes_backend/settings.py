@@ -178,6 +178,8 @@ REST_FRAMEWORK = {
         'daily_token_minute': '3/minute',
         'chat_message_minute': '30/minute',
     },
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.CursorPagination',
+    'PAGE_SIZE': 20,
 }
 
 # JWT settings

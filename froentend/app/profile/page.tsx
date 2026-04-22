@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import type { AxiosError } from 'axios';
 import { Navbar } from '@/components/Navbar';
 import { BottomNav } from '@/components/BottomNav';
@@ -33,26 +33,40 @@ export default function ProfilePage() {
   
   const [echoes, setEchoes] = useState<Echo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextEchoesUrl, setNextEchoesUrl] = useState<string | null>(null);
   const [claiming, setClaiming] = useState(false);
   const [echoToDelete, setEchoToDelete] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
+  const fetchEchoes = useCallback(async (url?: string) => {
     if (!user) return;
-    
-    const fetchEchoes = async () => {
-      try {
-        const data = await userService.getMyEchoes();
-        setEchoes(data);
-      } catch {
-        showToast('Failed to load your echoes.', 'error');
-      } finally {
+
+    const isNextPage = Boolean(url);
+    if (isNextPage) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
+    }
+
+    try {
+      const data = await userService.getMyEchoes(url);
+      setEchoes((current) => (isNextPage ? [...current, ...data.results] : data.results));
+      setNextEchoesUrl(data.next);
+    } catch {
+      showToast(isNextPage ? 'Failed to load more echoes.' : 'Failed to load your echoes.', 'error');
+    } finally {
+      if (isNextPage) {
+        setLoadingMore(false);
+      } else {
         setLoading(false);
       }
-    };
+    }
+  }, [showToast, user]);
 
-    fetchEchoes();
-  }, [user, showToast]);
+  useEffect(() => {
+    void fetchEchoes();
+  }, [fetchEchoes]);
 
   const handleClaimTokens = async () => {
     if (!user || claiming) return;
@@ -187,7 +201,7 @@ export default function ProfilePage() {
           <section>
             <div className="flex justify-between items-end mb-6">
               <h2 className="font-headline text-xl font-bold text-on-surface">My Echoes</h2>
-              <span className="text-on-surface-variant text-sm font-medium">{echoes.length} Total</span>
+              <span className="text-on-surface-variant text-sm font-medium">{echoes.length} Loaded</span>
             </div>
             
             <div className="space-y-6">
@@ -201,32 +215,46 @@ export default function ProfilePage() {
                   <p className="text-on-surface-variant font-medium">You haven&apos;t shared any echoes yet.</p>
                 </div>
               ) : (
-                echoes.map((echo) => (
-                  <div key={echo.id} className="echo-bubble bg-surface-container-lowest p-8 shadow-sm border border-outline-variant/5 transition-all hover:shadow-md cursor-pointer group" style={{ boxShadow: '0px 4px 24px rgba(83,74,183,0.08)' }}>
-                    <p className="text-lg leading-relaxed text-on-surface mb-6 font-body whitespace-pre-wrap">
-                      {echo.content}
-                    </p>
-                    <div className="flex items-center justify-between text-on-surface-variant">
-                      <div className="flex items-center gap-6">
-                        <span className="flex items-center gap-1.5 text-xs font-medium">
-                          <span className="material-symbols-outlined text-lg text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span> 
-                          {echo.resonance_count}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-[10px] font-bold tracking-wider font-label opacity-60 uppercase">
-                          {formatTimeAgo(echo.created_at)}
-                        </span>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setEchoToDelete(echo.id); }}
-                          className="text-on-surface-variant hover:text-error transition-colors p-1"
-                        >
-                          <span className="material-symbols-outlined text-base">delete</span>
-                        </button>
+                <>
+                  {echoes.map((echo) => (
+                    <div key={echo.id} className="echo-bubble bg-surface-container-lowest p-8 shadow-sm border border-outline-variant/5 transition-all hover:shadow-md cursor-pointer group" style={{ boxShadow: '0px 4px 24px rgba(83,74,183,0.08)' }}>
+                      <p className="text-lg leading-relaxed text-on-surface mb-6 font-body whitespace-pre-wrap">
+                        {echo.content}
+                      </p>
+                      <div className="flex items-center justify-between text-on-surface-variant">
+                        <div className="flex items-center gap-6">
+                          <span className="flex items-center gap-1.5 text-xs font-medium">
+                            <span className="material-symbols-outlined text-lg text-primary" style={{ fontVariationSettings: "'FILL' 1" }}>favorite</span>
+                            {echo.resonance_count}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-[10px] font-bold tracking-wider font-label opacity-60 uppercase">
+                            {formatTimeAgo(echo.created_at)}
+                          </span>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setEchoToDelete(echo.id); }}
+                            className="text-on-surface-variant hover:text-error transition-colors p-1"
+                          >
+                            <span className="material-symbols-outlined text-base">delete</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  ))}
+                  {nextEchoesUrl && (
+                    <div className="pt-2 text-center">
+                      <button
+                        type="button"
+                        onClick={() => fetchEchoes(nextEchoesUrl)}
+                        disabled={loadingMore}
+                        className="rounded-full bg-surface-container-high px-5 py-3 text-sm font-semibold text-primary transition-colors hover:bg-surface-container-highest disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {loadingMore ? 'Loading...' : 'Load more'}
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </section>

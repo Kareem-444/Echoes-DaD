@@ -1,4 +1,5 @@
 from datetime import date
+from django.db import transaction
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
@@ -25,27 +26,29 @@ def token_balance(request):
 @permission_classes([IsAuthenticated])
 @throttle_classes([DailyTokenRateThrottle])
 def daily_reward(request):
-    user = request.user
     today = date.today()
 
-    if user.last_daily_claim == today:
-        return Response(
-            {'detail': 'Daily tokens already claimed. Come back tomorrow!'},
-            status=status.HTTP_400_BAD_REQUEST
+    with transaction.atomic():
+        user = type(request.user).objects.select_for_update().get(pk=request.user.pk)
+
+        if user.last_daily_claim == today:
+            return Response(
+                {'detail': 'Daily tokens already claimed. Come back tomorrow!'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        user.token_balance += DAILY_REWARD
+        user.last_daily_claim = today
+        user.save(update_fields=['token_balance', 'last_daily_claim'])
+
+        transaction_record = TokenTransaction.objects.create(
+            user=user,
+            amount=DAILY_REWARD,
+            reason='daily_reward',
         )
-
-    user.token_balance += DAILY_REWARD
-    user.last_daily_claim = today
-    user.save(update_fields=['token_balance', 'last_daily_claim'])
-
-    transaction = TokenTransaction.objects.create(
-        user=user,
-        amount=DAILY_REWARD,
-        reason='daily_reward',
-    )
 
     return Response({
         'detail': f'{DAILY_REWARD} tokens added to your balance.',
         'balance': user.token_balance,
-        'transaction': TokenTransactionSerializer(transaction).data,
+        'transaction': TokenTransactionSerializer(transaction_record).data,
     }, status=status.HTTP_200_OK)

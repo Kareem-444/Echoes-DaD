@@ -10,8 +10,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from django.utils import timezone
-from .models import Echo, Report, DailyPrompt
+from .models import Echo, Report, ResonanceRecord, DailyPrompt
 from .serializers import EchoSerializer, EchoCreateSerializer, DailyPromptSerializer
+from apps.core.pagination import CreatedAtCursorPagination
 from apps.core.throttles import ReportRateThrottle, ResonateRateThrottle
 from apps.notifications.services import create_notification_for_user
 from apps.users.models import Block
@@ -44,15 +45,11 @@ def echo_list_create(request):
             
         echoes = Echo.objects.filter(
             expires_at__gt=timezone.now()
-        ).exclude(author_id__in=excluded_ids).select_related('author').annotate(
-            boost_priority=django_models.Case(
-                django_models.When(is_boosted=True, then=0),
-                default=1,
-                output_field=django_models.IntegerField(),
-            )
-        ).order_by('boost_priority', '-created_at')
-        serializer = EchoSerializer(echoes, many=True)
-        return Response(serializer.data)
+        ).exclude(author_id__in=excluded_ids).select_related('author').order_by('-created_at')
+        paginator = CreatedAtCursorPagination()
+        page = paginator.paginate_queryset(echoes, request)
+        serializer = EchoSerializer(page, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     serializer = EchoCreateSerializer(data=request.data)
     if serializer.is_valid():
@@ -67,8 +64,10 @@ def echo_list_create(request):
 @permission_classes([IsAuthenticated])
 def my_echoes(request):
     echoes = Echo.objects.filter(author=request.user).select_related('author').order_by('-created_at')
-    serializer = EchoSerializer(echoes, many=True)
-    return Response(serializer.data)
+    paginator = CreatedAtCursorPagination()
+    page = paginator.paginate_queryset(echoes, request)
+    serializer = EchoSerializer(page, many=True)
+    return paginator.get_paginated_response(serializer.data)
 
 
 class BoostEchoView(APIView):
@@ -128,18 +127,30 @@ class BoostEchoView(APIView):
 @permission_classes([IsAuthenticated])
 @throttle_classes([ResonateRateThrottle])
 def resonate(request, echo_id):
-    try:
-        echo = Echo.objects.get(id=echo_id)
-    except Echo.DoesNotExist:
-        return Response({'detail': 'Echo not found.'}, status=status.HTTP_404_NOT_FOUND)
+    with transaction.atomic():
+        try:
+            echo = Echo.objects.select_related('author').select_for_update().get(id=echo_id)
+        except Echo.DoesNotExist:
+            return Response({'detail': 'Echo not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-    echo.resonance_count = django_models.F('resonance_count') + 1
-    echo.save(update_fields=['resonance_count'])
+        _, created = ResonanceRecord.objects.get_or_create(
+            user=request.user,
+            echo=echo,
+        )
+        if not created:
+            return Response(
+                {'detail': 'You have already resonated with this echo.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-    echo.author.resonances = django_models.F('resonances') + 1
-    echo.author.save(update_fields=['resonances'])
+        echo.resonance_count = django_models.F('resonance_count') + 1
+        echo.save(update_fields=['resonance_count'])
 
-    echo.refresh_from_db()
+        type(request.user).objects.filter(pk=echo.author_id).update(
+            resonances=django_models.F('resonances') + 1
+        )
+
+        echo.refresh_from_db()
     
     # Milestone Detection
     current_count = echo.resonance_count

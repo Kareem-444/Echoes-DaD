@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 
 import { useNotifications } from '@/lib/hooks/useNotifications';
 import { useAuth } from '@/lib/AuthContext';
@@ -83,11 +84,13 @@ export default function NotificationInboxButton() {
   const [isLoading, setIsLoading] = useState(true);
   const [isMarkingRead, setIsMarkingRead] = useState(false);
   const [notifications, setNotifications] = useState<StoredNotification[]>([]);
+  const [hasMoreNotifications, setHasMoreNotifications] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   const loadNotifications = useCallback(async () => {
     if (!user) {
       setNotifications([]);
+      setHasMoreNotifications(false);
       setIsLoading(false);
       return;
     }
@@ -95,7 +98,8 @@ export default function NotificationInboxButton() {
     setIsLoading(true);
     try {
       const response = await notificationService.list();
-      setNotifications(response);
+      setNotifications(response.results);
+      setHasMoreNotifications(Boolean(response.next));
     } finally {
       setIsLoading(false);
     }
@@ -193,7 +197,7 @@ export default function NotificationInboxButton() {
             <div>
               <h3 className="font-headline text-lg font-bold text-primary">Notifications</h3>
               <p className="text-xs font-medium text-on-surface-variant">
-                Last 20 updates in your Echoes inbox
+                Latest updates in your Echoes inbox
               </p>
             </div>
             <button
@@ -242,6 +246,17 @@ export default function NotificationInboxButton() {
               </div>
             )}
           </div>
+          {hasMoreNotifications && (
+            <div className="border-t border-outline-variant/10 px-5 py-3 text-right">
+              <Link
+                href="/notifications"
+                onClick={() => setIsOpen(false)}
+                className="text-xs font-bold uppercase tracking-[0.18em] text-primary hover:underline"
+              >
+                See all
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </div>

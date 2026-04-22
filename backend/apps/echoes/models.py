@@ -70,6 +70,30 @@ class Report(models.Model):
         return f"Report by {self.reporter.anonymous_name} on {self.echo.id}"
 
 
+class ResonanceRecord(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='resonance_records'
+    )
+    echo = models.ForeignKey(
+        Echo,
+        on_delete=models.CASCADE,
+        related_name='resonance_records'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'resonance_records'
+        constraints = [
+            models.UniqueConstraint(fields=['user', 'echo'], name='unique_user_echo_resonance'),
+        ]
+
+    def __str__(self):
+        return f"Resonance by {self.user.anonymous_name} on {self.echo.id}"
+
+
 class DailyPrompt(models.Model):
     text = models.TextField()
     date = models.DateField(unique=True)

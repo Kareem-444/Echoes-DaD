@@ -97,6 +97,12 @@ export interface AuthResponse {
   user: User;
 }
 
+export interface PaginatedResponse<T> {
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
+
 // Notifications
 
 export type NotificationType = 'chat_message' | 'new_match' | 'resonance_milestone';

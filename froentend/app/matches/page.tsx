@@ -33,22 +33,41 @@ function formatTimeAgo(dateString: string): string {
 export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [nextMatchesUrl, setNextMatchesUrl] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showToast } = useToast();
   const { user } = useAuth();
   const router = useRouter();
 
-  const fetchMatches = useCallback(async () => {
-    try {
-      const data = await matchService.getMatches();
-      setMatches(data);
-    } catch {
-      setError('Failed to load matches.');
-    } finally {
-      setLoading(false);
+  const fetchMatches = useCallback(async (url?: string) => {
+    const isNextPage = Boolean(url);
+    if (isNextPage) {
+      setLoadingMore(true);
+    } else {
+      setLoading(true);
     }
-  }, []);
+
+    try {
+      const data = await matchService.getMatches(url);
+      setMatches((current) => (isNextPage ? [...current, ...data.results] : data.results));
+      setNextMatchesUrl(data.next);
+      setError(null);
+    } catch {
+      if (isNextPage) {
+        showToast('Failed to load more matches.', 'error');
+      } else {
+        setError('Failed to load matches.');
+      }
+    } finally {
+      if (isNextPage) {
+        setLoadingMore(false);
+      } else {
+        setLoading(false);
+      }
+    }
+  }, [showToast]);
 
   useEffect(() => {
     fetchMatches();
@@ -140,28 +159,42 @@ export default function MatchesPage() {
                 </p>
               </div>
             ) : (
-              matches.map((match, idx) => {
-                const variant = idx % 3;
-                const isCurrentUserUser1 = match.user1.id === user?.id;
-                const partner = isCurrentUserUser1 ? match.user2 : match.user1;
-                const partnerEcho = isCurrentUserUser1 ? match.echo2 : match.echo1;
+              <>
+                {matches.map((match, idx) => {
+                  const variant = idx % 3;
+                  const isCurrentUserUser1 = match.user1.id === user?.id;
+                  const partner = isCurrentUserUser1 ? match.user2 : match.user1;
+                  const partnerEcho = isCurrentUserUser1 ? match.echo2 : match.echo1;
 
-                return (
-                  <MatchCard
-                    key={match.id}
-                    matchId={match.id}
-                    username={partner.anonymous_name}
-                    matchedVia={partnerEcho.content.slice(0, 40)}
-                    harmony={match.harmony_score}
-                    excerpt={partnerEcho.content}
-                    sharedAgo={formatTimeAgo(match.created_at)}
-                    avatarShape={partner.avatar_shape}
-                    avatarColor={partner.avatar_color}
-                    icon={ICON_MAP[variant]}
-                    onConnect={handleConnect}
-                  />
-                );
-              })
+                  return (
+                    <MatchCard
+                      key={match.id}
+                      matchId={match.id}
+                      username={partner.anonymous_name}
+                      matchedVia={partnerEcho.content.slice(0, 40)}
+                      harmony={match.harmony_score}
+                      excerpt={partnerEcho.content}
+                      sharedAgo={formatTimeAgo(match.created_at)}
+                      avatarShape={partner.avatar_shape}
+                      avatarColor={partner.avatar_color}
+                      icon={ICON_MAP[variant]}
+                      onConnect={handleConnect}
+                    />
+                  );
+                })}
+                {nextMatchesUrl && (
+                  <div className="pt-2 text-center">
+                    <button
+                      type="button"
+                      onClick={() => fetchMatches(nextMatchesUrl)}
+                      disabled={loadingMore}
+                      className="rounded-full bg-surface-container-high px-5 py-3 text-sm font-semibold text-primary transition-colors hover:bg-surface-container-highest disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {loadingMore ? 'Loading...' : 'Load more'}
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </div>
 

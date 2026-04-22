@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.db import transaction
 from rest_framework import status
 
 from apps.matches.models import Match
@@ -54,34 +55,38 @@ def send_match_message(match_id, user, payload):
     match = get_match_for_user(match_id, user)
     recipient = ensure_match_is_writable(match, user)
 
-    if user.token_balance < MESSAGE_TOKEN_COST:
-        raise ChatServiceError(
-            f'Insufficient tokens. Sending a message costs {MESSAGE_TOKEN_COST} tokens.',
-            status.HTTP_402_PAYMENT_REQUIRED,
-        )
-
     serializer = MessageCreateSerializer(data={'content': payload.get('content', '')})
     if not serializer.is_valid():
         raise ChatServiceError(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
-    user.token_balance -= MESSAGE_TOKEN_COST
-    user.save(update_fields=['token_balance'])
+    with transaction.atomic():
+        locked_user = type(user).objects.select_for_update().get(pk=user.pk)
+        if locked_user.token_balance < MESSAGE_TOKEN_COST:
+            raise ChatServiceError(
+                f'Insufficient tokens. Sending a message costs {MESSAGE_TOKEN_COST} tokens.',
+                status.HTTP_402_PAYMENT_REQUIRED,
+            )
 
-    TokenTransaction.objects.create(
-        user=user,
-        amount=-MESSAGE_TOKEN_COST,
-        reason='connect_chat',
-    )
+        locked_user.token_balance -= MESSAGE_TOKEN_COST
+        locked_user.save(update_fields=['token_balance'])
 
-    message = Message.objects.create(
-        match=match,
-        sender=user,
-        content=serializer.validated_data['content'],
-    )
+        TokenTransaction.objects.create(
+            user=locked_user,
+            amount=-MESSAGE_TOKEN_COST,
+            reason='connect_chat',
+        )
+
+        message = Message.objects.create(
+            match=match,
+            sender=locked_user,
+            content=serializer.validated_data['content'],
+        )
+
+    user.token_balance = locked_user.token_balance
 
     return {
         'message': MessageSerializer(message).data,
         'message_instance': message,
         'recipient_id': str(recipient.id),
-        'new_token_balance': user.token_balance,
+        'new_token_balance': locked_user.token_balance,
     }

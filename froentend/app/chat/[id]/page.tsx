@@ -29,11 +29,21 @@ export default function ChatPage({ params }: { params: { id: string } }) {
   const [content, setContent] = useState('');
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const preserveScrollRef = useRef(false);
   
   const { user, updateUser } = useAuth();
   const { showToast } = useToast();
   const router = useRouter();
-  const { messages, sendMessage, isConnected, loading, loadError } = useChatSocket(matchId);
+  const {
+    messages,
+    sendMessage,
+    isConnected,
+    loading,
+    loadingOlder,
+    hasOlderMessages,
+    loadOlderMessages,
+    loadError,
+  } = useChatSocket(matchId);
 
   const [matchData, setMatchData] = useState<MatchDetail | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -62,6 +72,9 @@ export default function ChatPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     // Auto-scroll to bottom on new messages
+    if (preserveScrollRef.current) {
+      return;
+    }
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
@@ -143,6 +156,21 @@ export default function ChatPage({ params }: { params: { id: string } }) {
     }
   };
 
+  const handleLoadOlderMessages = async () => {
+    const scrollContainer = scrollRef.current;
+    const previousScrollHeight = scrollContainer?.scrollHeight ?? 0;
+    preserveScrollRef.current = true;
+
+    await loadOlderMessages();
+
+    window.requestAnimationFrame(() => {
+      if (scrollContainer) {
+        scrollContainer.scrollTop += scrollContainer.scrollHeight - previousScrollHeight;
+      }
+      preserveScrollRef.current = false;
+    });
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') handleSend();
   };
@@ -221,6 +249,18 @@ export default function ChatPage({ params }: { params: { id: string } }) {
 
         <main ref={scrollRef} className="flex-grow pt-24 pb-32 px-6 relative overflow-y-auto bg-surface scroll-smooth">
           <div className="max-w-3xl mx-auto flex flex-col gap-6 relative z-10 pt-4">
+            {!loading && hasOlderMessages && (
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => void handleLoadOlderMessages()}
+                  disabled={loadingOlder}
+                  className="rounded-full bg-surface-container-high px-4 py-2 text-xs font-semibold text-primary transition-colors hover:bg-surface-container-highest disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {loadingOlder ? 'Loading...' : 'Load older messages'}
+                </button>
+              </div>
+            )}
             {loading ? (
               <div className="flex justify-center p-8">
                 <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />

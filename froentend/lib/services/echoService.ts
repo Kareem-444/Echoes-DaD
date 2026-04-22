@@ -1,9 +1,9 @@
 import api from '@/lib/api';
-import type { BoostEchoResponse, Echo, ResonateEchoResponse } from '@/lib/types';
+import type { BoostEchoResponse, Echo, PaginatedResponse, ResonateEchoResponse } from '@/lib/types';
 
 export const echoService = {
-  getEchoes: (): Promise<Echo[]> =>
-    api.get<Echo[]>('/api/echoes/').then((r) => r.data),
+  getEchoes: (url = '/api/echoes/'): Promise<PaginatedResponse<Echo>> =>
+    api.get<PaginatedResponse<Echo>>(url).then((r) => r.data),
 
   createEcho: (content: string, mood?: string): Promise<Echo> =>
     api.post<Echo>('/api/echoes/', { content, mood }).then((r) => r.data),

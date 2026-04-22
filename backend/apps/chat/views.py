@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from .models import Message
 from .serializers import MessageSerializer
 from .services import ChatServiceError, get_match_for_user, send_match_message
+from apps.core.pagination import ChatHistoryCursorPagination
 from apps.core.throttles import ChatMessageRateThrottle
 from apps.notifications.services import create_notification_for_user
 
@@ -22,10 +23,12 @@ def chat_messages(request, match_id):
         return Response(exc.detail, status=exc.status_code)
 
     if request.method == 'GET':
-        messages = Message.objects.filter(match=match).select_related('sender')
-        messages.exclude(sender=request.user).filter(is_read=False).update(is_read=True)
-        serializer = MessageSerializer(messages, many=True)
-        return Response(serializer.data)
+        Message.objects.filter(match=match).exclude(sender=request.user).filter(is_read=False).update(is_read=True)
+        messages = Message.objects.filter(match=match).select_related('sender').order_by('-created_at')
+        paginator = ChatHistoryCursorPagination()
+        page = paginator.paginate_queryset(messages, request)
+        serializer = MessageSerializer(list(reversed(page)), many=True)
+        return paginator.get_paginated_response(serializer.data)
 
     try:
         result = send_match_message(match_id, request.user, request.data)

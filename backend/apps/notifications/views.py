@@ -5,14 +5,17 @@ from rest_framework.response import Response
 
 from .models import Notification
 from .serializers import NotificationSerializer
+from apps.core.pagination import CreatedAtCursorPagination
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def notification_list(request):
-    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:20]
-    serializer = NotificationSerializer(notifications, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+    paginator = CreatedAtCursorPagination()
+    page = paginator.paginate_queryset(notifications, request)
+    serializer = NotificationSerializer(page, many=True)
+    return paginator.get_paginated_response(serializer.data)
 
 
 @api_view(['POST'])

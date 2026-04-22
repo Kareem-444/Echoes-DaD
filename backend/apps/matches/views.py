@@ -9,6 +9,7 @@ from rest_framework.response import Response
 
 from .models import Match
 from .serializers import MatchSerializer
+from apps.core.pagination import CreatedAtCursorPagination
 from apps.core.throttles import MatchGenerateRateThrottle
 from apps.echoes.models import Echo
 from apps.notifications.services import create_notification_for_user
@@ -30,9 +31,11 @@ def match_list(request):
     matches = Match.objects.filter(
         (Q(user1=request.user) | Q(user2=request.user)),
         is_active=True
-    ).exclude(user1_id__in=excluded_ids).exclude(user2_id__in=excluded_ids).select_related('user1', 'user2', 'echo1', 'echo2')
-    serializer = MatchSerializer(matches, many=True)
-    return Response(serializer.data)
+    ).exclude(user1_id__in=excluded_ids).exclude(user2_id__in=excluded_ids).select_related('user1', 'user2', 'echo1', 'echo2').order_by('-created_at')
+    paginator = CreatedAtCursorPagination()
+    page = paginator.paginate_queryset(matches, request)
+    serializer = MatchSerializer(page, many=True)
+    return paginator.get_paginated_response(serializer.data)
 
 
 @api_view(['POST'])
