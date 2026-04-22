@@ -1,3 +1,5 @@
+import logging
+
 from datetime import date
 from django.db import transaction
 from rest_framework import status
@@ -10,6 +12,8 @@ from .models import TokenTransaction
 from .serializers import TokenBalanceSerializer, TokenTransactionSerializer
 
 DAILY_REWARD = 5
+
+logger = logging.getLogger(__name__)
 
 
 @api_view(['GET'])
@@ -32,6 +36,7 @@ def daily_reward(request):
         user = type(request.user).objects.select_for_update().get(pk=request.user.pk)
 
         if user.last_daily_claim == today:
+            logger.warning('Duplicate daily token claim rejected for user %s.', user.id)
             return Response(
                 {'detail': 'Daily tokens already claimed. Come back tomorrow!'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -47,6 +52,7 @@ def daily_reward(request):
             reason='daily_reward',
         )
 
+    logger.info('Daily token reward granted to user %s.', user.id)
     return Response({
         'detail': f'{DAILY_REWARD} tokens added to your balance.',
         'balance': user.token_balance,

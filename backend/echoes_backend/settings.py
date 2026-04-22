@@ -17,6 +17,13 @@ def env_bool(name, default=False):
     return value.lower() in {'1', 'true', 'yes', 'on'}
 
 
+def env_list(name, default):
+    value = os.getenv(name)
+    if not value:
+        return default
+    return [item.strip() for item in value.split(',') if item.strip()]
+
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY')
 if not SECRET_KEY:
@@ -192,7 +199,54 @@ SIMPLE_JWT = {
 }
 
 # CORS settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
+CORS_ALLOWED_ORIGINS = env_list(
+    'DJANGO_CORS_ORIGINS',
+    ['http://localhost:3000', 'http://127.0.0.1:3000'],
+)
+# Credentialed CORS must only be used with a strictly managed origin allowlist.
 CORS_ALLOW_CREDENTIALS = True
+
+# Logging
+APP_LOGGERS = [
+    'apps.users',
+    'apps.echoes',
+    'apps.chat',
+    'apps.tokens',
+    'apps.notifications',
+    'apps.matches',
+]
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'structured': {
+            'format': '%(asctime)s %(levelname)s %(name)s %(message)s',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'structured',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'ERROR',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        **{
+            logger_name: {
+                'handlers': ['console'],
+                'level': 'INFO',
+                'propagate': False,
+            }
+            for logger_name in APP_LOGGERS
+        },
+    },
+}

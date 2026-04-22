@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth import authenticate
 from google.auth.transport import requests as google_requests
@@ -12,6 +14,8 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from apps.core.throttles import AuthRateThrottle
 from .models import User, Block
 from .serializers import GoogleAuthSerializer, LoginSerializer, RegisterSerializer, UserSerializer, UserSettingsSerializer
+
+logger = logging.getLogger(__name__)
 
 
 def get_tokens_for_user(user):
@@ -75,6 +79,7 @@ def login(request):
     user = authenticate(request, username=email, password=password)
 
     if user is None:
+        logger.warning('Failed login attempt.')
         return Response(
             {'detail': 'Invalid email or password.'},
             status=status.HTTP_401_UNAUTHORIZED
@@ -99,8 +104,10 @@ def google_login(request):
     try:
         token_info = verify_google_token(serializer.validated_data['id_token'])
     except ValueError as exc:
+        logger.warning('Google OAuth token rejected: %s', exc)
         return Response({'detail': str(exc)}, status=status.HTTP_400_BAD_REQUEST)
     except Exception:
+        logger.exception('Unhandled Google OAuth verification error.')
         return Response(
             {'detail': 'Unable to verify Google sign-in token.'},
             status=status.HTTP_401_UNAUTHORIZED,
@@ -140,6 +147,7 @@ def logout(request):
         token = RefreshToken(refresh_token)
         token.blacklist()
     except TokenError:
+        logger.warning('Logout received invalid or already blacklisted refresh token for user %s.', request.user.id)
         return Response(
             {'detail': 'Refresh token is invalid or already blacklisted.'},
             status=status.HTTP_400_BAD_REQUEST,
@@ -177,6 +185,7 @@ def block_user(request, user_id):
     try:
         blocked_user = User.objects.get(id=user_id)
     except User.DoesNotExist:
+        logger.warning('Block attempt targeted missing user %s by user %s.', user_id, request.user.id)
         return Response({'detail': 'User not found.'}, status=status.HTTP_404_NOT_FOUND)
         
     block, created = Block.objects.get_or_create(

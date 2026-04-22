@@ -1,3 +1,5 @@
+import logging
+
 from django.db.models import Q
 from django.db import transaction
 from rest_framework import status
@@ -11,6 +13,8 @@ from .serializers import MessageCreateSerializer, MessageSerializer
 
 MESSAGE_TOKEN_COST = 5
 
+logger = logging.getLogger(__name__)
+
 
 class ChatServiceError(Exception):
     def __init__(self, detail, status_code):
@@ -23,9 +27,11 @@ def get_match_for_user(match_id, user):
     try:
         match = Match.objects.select_related('user1', 'user2').get(id=match_id)
     except Match.DoesNotExist as exc:
+        logger.warning('Chat access requested for missing match %s by user %s.', match_id, user.id)
         raise ChatServiceError('Match not found.', status.HTTP_404_NOT_FOUND) from exc
 
     if user not in (match.user1, match.user2):
+        logger.warning('Unauthorized chat access for match %s by user %s.', match_id, user.id)
         raise ChatServiceError('You are not a participant in this match.', status.HTTP_403_FORBIDDEN)
 
     return match
@@ -37,6 +43,7 @@ def get_other_user(match, user):
 
 def ensure_match_is_writable(match, user):
     if not match.is_active:
+        logger.warning('Message rejected for inactive match %s by user %s.', match.id, user.id)
         raise ChatServiceError('This conversation is read-only. You are unmatched.', status.HTTP_403_FORBIDDEN)
 
     other_user = get_other_user(match, user)
@@ -46,6 +53,7 @@ def ensure_match_is_writable(match, user):
     ).exists()
 
     if blocked:
+        logger.warning('Message rejected for blocked match %s by user %s.', match.id, user.id)
         raise ChatServiceError('This conversation is read-only due to a block.', status.HTTP_403_FORBIDDEN)
 
     return other_user
@@ -57,11 +65,13 @@ def send_match_message(match_id, user, payload):
 
     serializer = MessageCreateSerializer(data={'content': payload.get('content', '')})
     if not serializer.is_valid():
+        logger.warning('Invalid chat message payload for match %s by user %s.', match_id, user.id)
         raise ChatServiceError(serializer.errors, status.HTTP_400_BAD_REQUEST)
 
     with transaction.atomic():
         locked_user = type(user).objects.select_for_update().get(pk=user.pk)
         if locked_user.token_balance < MESSAGE_TOKEN_COST:
+            logger.warning('Insufficient token balance for chat message by user %s.', user.id)
             raise ChatServiceError(
                 f'Insufficient tokens. Sending a message costs {MESSAGE_TOKEN_COST} tokens.',
                 status.HTTP_402_PAYMENT_REQUIRED,
@@ -83,6 +93,7 @@ def send_match_message(match_id, user, payload):
         )
 
     user.token_balance = locked_user.token_balance
+    logger.info('Chat message sent for match %s by user %s.', match_id, user.id)
 
     return {
         'message': MessageSerializer(message).data,

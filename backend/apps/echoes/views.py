@@ -1,3 +1,5 @@
+import logging
+
 from datetime import timedelta
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -21,6 +23,8 @@ from apps.tokens.models import TokenTransaction
 BOOST_COST = 25
 BOOST_DURATION = timedelta(hours=24)
 BOOST_MAX_DURATION = timedelta(days=7)
+
+logger = logging.getLogger(__name__)
 
 
 def build_echo_preview(content):
@@ -78,24 +82,29 @@ class BoostEchoView(APIView):
             try:
                 echo = Echo.objects.select_for_update().get(id=echo_id)
             except Echo.DoesNotExist:
+                logger.warning('Boost requested for missing echo %s by user %s.', echo_id, request.user.id)
                 return Response({'detail': 'Echo not found.'}, status=status.HTTP_404_NOT_FOUND)
 
             user = type(request.user).objects.select_for_update().get(pk=request.user.pk)
             now = timezone.now()
 
             if echo.author_id != user.id:
+                logger.warning('Unauthorized boost attempt for echo %s by user %s.', echo_id, user.id)
                 return Response({'detail': 'You can only boost your own echoes.'}, status=status.HTTP_403_FORBIDDEN)
 
             if echo.expires_at <= now:
+                logger.warning('Boost rejected for expired echo %s by user %s.', echo_id, user.id)
                 return Response({'detail': 'Cannot boost an expired echo.'}, status=status.HTTP_400_BAD_REQUEST)
 
             if user.token_balance < BOOST_COST:
+                logger.warning('Boost rejected for insufficient token balance by user %s.', user.id)
                 return Response({'detail': 'Insufficient tokens.'}, status=status.HTTP_400_BAD_REQUEST)
 
             max_expires_at = now + BOOST_MAX_DURATION
             new_expires_at = echo.expires_at + BOOST_DURATION
 
             if new_expires_at > max_expires_at:
+                logger.warning('Boost rejected because echo %s reached max duration.', echo_id)
                 return Response(
                     {'detail': 'Echo has reached the maximum boost duration.'},
                     status=status.HTTP_400_BAD_REQUEST
@@ -115,6 +124,7 @@ class BoostEchoView(APIView):
                 reason='boost',
             )
 
+        logger.info('Echo %s boosted by user %s.', echo_id, user.id)
         return Response({
             'detail': 'Echo boosted successfully.',
             'new_expires_at': echo.expires_at,
@@ -131,6 +141,7 @@ def resonate(request, echo_id):
         try:
             echo = Echo.objects.select_related('author').select_for_update().get(id=echo_id)
         except Echo.DoesNotExist:
+            logger.warning('Resonance requested for missing echo %s by user %s.', echo_id, request.user.id)
             return Response({'detail': 'Echo not found.'}, status=status.HTTP_404_NOT_FOUND)
 
         _, created = ResonanceRecord.objects.get_or_create(
@@ -138,6 +149,7 @@ def resonate(request, echo_id):
             echo=echo,
         )
         if not created:
+            logger.warning('Duplicate resonance rejected for echo %s by user %s.', echo_id, request.user.id)
             return Response(
                 {'detail': 'You have already resonated with this echo.'},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -177,6 +189,7 @@ def resonate(request, echo_id):
                 'payload': payload,
             },
         )
+        logger.info('Resonance milestone %s reached for echo %s.', current_count, echo.id)
     
     return Response(response_data)
 
@@ -210,9 +223,11 @@ def echo_detail(request, echo_id):
     try:
         echo = Echo.objects.get(id=echo_id)
     except Echo.DoesNotExist:
+        logger.warning('Delete requested for missing echo %s by user %s.', echo_id, request.user.id)
         return Response({'detail': 'Echo not found.'}, status=status.HTTP_404_NOT_FOUND)
 
     if echo.author != request.user:
+        logger.warning('Unauthorized delete attempt for echo %s by user %s.', echo_id, request.user.id)
         return Response({'detail': 'You can only delete your own echo.'}, status=status.HTTP_403_FORBIDDEN)
         
     echo.delete()
@@ -226,10 +241,12 @@ def report_echo(request, echo_id):
     try:
         echo = Echo.objects.get(id=echo_id)
     except Echo.DoesNotExist:
+        logger.warning('Report requested for missing echo %s by user %s.', echo_id, request.user.id)
         return Response({'detail': 'Echo not found.'}, status=status.HTTP_404_NOT_FOUND)
         
     reason = request.data.get('reason')
     if reason not in ['spam', 'harmful', 'inappropriate', 'other']:
+        logger.warning('Invalid report reason for echo %s by user %s.', echo_id, request.user.id)
         return Response({'detail': 'Invalid reason.'}, status=status.HTTP_400_BAD_REQUEST)
         
     report, created = Report.objects.get_or_create(
@@ -239,6 +256,7 @@ def report_echo(request, echo_id):
     )
     
     if not created:
-         return Response({'detail': 'You have already reported this echo.'}, status=status.HTTP_400_BAD_REQUEST)
+        logger.warning('Duplicate report rejected for echo %s by user %s.', echo_id, request.user.id)
+        return Response({'detail': 'You have already reported this echo.'}, status=status.HTTP_400_BAD_REQUEST)
          
     return Response({'detail': 'Report submitted.'}, status=status.HTTP_201_CREATED)
