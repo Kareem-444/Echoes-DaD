@@ -27,6 +27,7 @@ class Echo(models.Model):
             models.Index(fields=['author', 'expires_at'], name='echo_author_expires_idx'),
             models.Index(fields=['expires_at'], name='echo_expires_idx'),
             models.Index(fields=['mood'], name='echo_mood_idx'),
+            models.Index(fields=['is_boosted', 'created_at'], name='echo_boost_feed_idx'),
         ]
 
     def save(self, *args, **kwargs):

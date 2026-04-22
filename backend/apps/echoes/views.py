@@ -49,7 +49,13 @@ def echo_list_create(request):
             
         echoes = Echo.objects.filter(
             expires_at__gt=timezone.now()
-        ).exclude(author_id__in=excluded_ids).select_related('author').order_by('-created_at')
+        ).exclude(author_id__in=excluded_ids).select_related('author').annotate(
+            boost_priority=django_models.Case(
+                django_models.When(is_boosted=True, then=0),
+                default=1,
+                output_field=django_models.IntegerField(),
+            )
+        ).order_by('boost_priority', '-created_at')
         paginator = CreatedAtCursorPagination()
         page = paginator.paginate_queryset(echoes, request)
         serializer = EchoSerializer(page, many=True)
