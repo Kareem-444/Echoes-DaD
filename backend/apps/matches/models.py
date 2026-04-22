@@ -32,6 +32,10 @@ class Match(models.Model):
     class Meta:
         db_table = 'matches'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user1', 'is_active'], name='match_user1_active_idx'),
+            models.Index(fields=['user2', 'is_active'], name='match_user2_active_idx'),
+        ]
 
     def __str__(self):
         return f"Match: {self.user1.anonymous_name} ↔ {self.user2.anonymous_name} ({self.harmony_score}% harmony)"

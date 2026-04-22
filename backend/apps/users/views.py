@@ -3,12 +3,13 @@ from django.contrib.auth import authenticate
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token as google_id_token
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from apps.core.throttles import AuthRateThrottle
 from .models import User, Block
 from .serializers import GoogleAuthSerializer, LoginSerializer, RegisterSerializer, UserSerializer, UserSettingsSerializer
 
@@ -47,6 +48,7 @@ def verify_google_token(raw_token):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([AuthRateThrottle])
 def register(request):
     serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():
@@ -62,6 +64,7 @@ def register(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([AuthRateThrottle])
 def login(request):
     serializer = LoginSerializer(data=request.data)
     if not serializer.is_valid():
@@ -87,6 +90,7 @@ def login(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([AuthRateThrottle])
 def google_login(request):
     serializer = GoogleAuthSerializer(data=request.data)
     if not serializer.is_valid():

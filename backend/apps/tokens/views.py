@@ -1,9 +1,10 @@
 from datetime import date
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.core.throttles import DailyTokenRateThrottle
 from .models import TokenTransaction
 from .serializers import TokenBalanceSerializer, TokenTransactionSerializer
 
@@ -22,6 +23,7 @@ def token_balance(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([DailyTokenRateThrottle])
 def daily_reward(request):
     user = request.user
     today = date.today()

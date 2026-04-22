@@ -23,6 +23,11 @@ class Echo(models.Model):
     class Meta:
         db_table = 'echoes'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['author', 'expires_at'], name='echo_author_expires_idx'),
+            models.Index(fields=['expires_at'], name='echo_expires_idx'),
+            models.Index(fields=['mood'], name='echo_mood_idx'),
+        ]
 
     def save(self, *args, **kwargs):
         if not self.expires_at:

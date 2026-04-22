@@ -25,6 +25,9 @@ class TokenTransaction(models.Model):
     class Meta:
         db_table = 'token_transactions'
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'created_at'], name='token_user_created_idx'),
+        ]
 
     def __str__(self):
         sign = '+' if self.amount > 0 else ''

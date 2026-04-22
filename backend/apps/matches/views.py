@@ -3,12 +3,13 @@ from django.db.models import Q
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Match
 from .serializers import MatchSerializer
+from apps.core.throttles import MatchGenerateRateThrottle
 from apps.echoes.models import Echo
 from apps.notifications.services import create_notification_for_user
 from apps.users.models import User, Block
@@ -36,6 +37,7 @@ def match_list(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([MatchGenerateRateThrottle])
 def generate_matches(request):
     user = request.user
 

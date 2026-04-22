@@ -1,18 +1,20 @@
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import Message
 from .serializers import MessageSerializer
 from .services import ChatServiceError, get_match_for_user, send_match_message
+from apps.core.throttles import ChatMessageRateThrottle
 from apps.notifications.services import create_notification_for_user
 
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([ChatMessageRateThrottle])
 def chat_messages(request, match_id):
     try:
         match = get_match_for_user(match_id, request.user)

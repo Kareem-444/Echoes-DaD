@@ -164,6 +164,20 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_THROTTLE_CLASSES': (
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ),
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '20/hour',
+        'user': '200/hour',
+        'auth_minute': '5/minute',
+        'resonate_minute': '30/minute',
+        'report_minute': '10/minute',
+        'match_generate_minute': '5/minute',
+        'daily_token_minute': '3/minute',
+        'chat_message_minute': '30/minute',
+    },
 }
 
 # JWT settings

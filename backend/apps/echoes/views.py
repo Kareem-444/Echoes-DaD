@@ -4,7 +4,7 @@ from channels.layers import get_channel_layer
 from django.db import models as django_models
 from django.db import transaction
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -12,6 +12,7 @@ from rest_framework.response import Response
 from django.utils import timezone
 from .models import Echo, Report, DailyPrompt
 from .serializers import EchoSerializer, EchoCreateSerializer, DailyPromptSerializer
+from apps.core.throttles import ReportRateThrottle, ResonateRateThrottle
 from apps.notifications.services import create_notification_for_user
 from apps.users.models import Block
 from apps.tokens.models import TokenTransaction
@@ -125,6 +126,7 @@ class BoostEchoView(APIView):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([ResonateRateThrottle])
 def resonate(request, echo_id):
     try:
         echo = Echo.objects.get(id=echo_id)
@@ -208,6 +210,7 @@ def echo_detail(request, echo_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([ReportRateThrottle])
 def report_echo(request, echo_id):
     try:
         echo = Echo.objects.get(id=echo_id)

@@ -22,6 +22,9 @@ class Message(models.Model):
     class Meta:
         db_table = 'messages'
         ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['match', 'created_at'], name='message_match_created_idx'),
+        ]
 
     def __str__(self):
         return f"Message from {self.sender.anonymous_name} in match {self.match.id}"
